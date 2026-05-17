@@ -1,0 +1,405 @@
+# 1.6 Baseline XLSX Behavior / Baseline XLSX 行为
+
+> **目的**: 把 `gen_remit_validation_report.py` 为 `(servicer=MRC, remit_date=2026-04-30)` 实际产出的 XLSX 文件凝练成一份**可机器对账、可代码复现**的真值基线 (baseline)：每张 sheet 的存在、列顺序、表头样式、单元格 number_format、高亮覆盖、`±inf` / `NaN` 渲染方式。1.6 Baseline XLSX 行为 (baseline.zh.md) 是 Stage 2 cell-identical 重写的**唯一最终验收依据**；任何 Stage 2 输出与本 baseline 的偏差都必须显式在 `decisions.md` 中获得许可。
+>
+> **受众**: Stage 2 渲染器实现者（必须 byte-for-cell 复现）、cell-identity harness 的作者、Stage 1 reviewer 做最终走读、QA 做 acceptance 签字。
+>
+> **修订历史**
+>
+> | 日期 | 作者 | 变更 |
+> |---|---|---|
+> | 2026-05-17 | Copilot CLI agent | v1 — 首版。从源码反推 baseline 契约（`util/gen_remit_validation_report.py:19-86, 1157-1798` + 五个 helper 与五个注册条目 `:1180-1356`）+ 1.3 Sheet 渲染层 (sheets.zh.md) § 4 的渲染机制；列出所有可由源码确定的渲染属性 + 所有**必须实测验证**的剩余 gap（标 `[VERIFY]`，待 `baselines/mrc/2026-04-30/validation_report.xlsx` 落地后回填）。 |
+
+> **MRC 章节索引** （`docs/mrc/`）—— 完整定义见 [`_chapter-index.md`](_chapter-index.md)
+>
+> | # | 标题 | 文件 | 职责 |
+> |---|---|---|---|
+> | 1.0 | TOC & Scope / 章节地图与范围 | `toc.zh.md` | 入口与契约 |
+> | 1.1 | Raw Data Layer / 原始数据层 | `rawdata.zh.md` | 上游表 + 时间锚 |
+> | 1.2 | Dataflow Layer / 数据流层 | `dataflow.zh.md` | 端到端执行流水线 |
+> | 1.3 | Sheet Rendering Layer / Sheet 渲染层 | `sheets.zh.md` | openpyxl 渲染契约 |
+> | 1.4 | Field Definitions / 字段定义 | `fields.zh.md` | 字段级血缘 + 业务含义 |
+> | 1.5 | Validation Rules / 验证规则 | `rules.zh.md` | 规则目录 |
+> | 1.6 | Baseline XLSX Behavior / Baseline XLSX 行为 | `baseline.zh.md` | baseline 真值 |
+> | 1.7 | User Review Gate / 用户走读评审 | （用户动作） | Stage 2 开闸点 |
+
+---
+
+## 1. Document role
+
+本文是 MRC 章节的子章节 **1.6**。它只回答一个问题：**对于 `(MRC, 2026-04-30)` 这个被冻结的 (servicer, remit_date) 组合，`gen_remit_validation_report.py` 实际生成的 XLSX 文件到底"长什么样"？哪些属性是 Stage 2 必须 byte-for-cell 复现的契约？哪些属性是 openpyxl 的默认副作用而非有意设计？**
+
+1.6 Baseline XLSX 行为 (baseline.zh.md) 与前 5 章的分工：
+
+- 1.3 Sheet 渲染层 (sheets.zh.md) 描述**渲染机制**（代码做了什么）；本章描述**渲染产物**（最终 XLSX 长什么样）。
+- 1.4 字段定义 (fields.zh.md) 描述**列血缘**（每列从哪来）；本章描述**列在 XLSX 里的物理表现**（number_format、宽度、表头样式）。
+- 1.5 验证规则 (rules.zh.md) 描述**判定规则**（什么时候算异常）；本章描述**异常在 XLSX 里的视觉编码**（粉底 / 橙字的确切 RGB）。
+
+本章 **不**：
+
+- 重述渲染流水线 —— 见 1.3 Sheet 渲染层 (sheets.zh.md) § 3。
+- 定义业务规则 —— 见 1.5 验证规则 (rules.zh.md)。
+- 描述上游 SQL —— 见 1.2 数据流层 (dataflow.zh.md)。
+
+<!-- BUSINESS-PURPOSE-V1 -->
+### 业务用途 / Business purpose
+
+本章是整个 MRC Stage 1 反推工作的**收口章节**——把"代码读出来 + 数据流明白 + 规则列清楚"全部最终物化成"一份 XLSX 长这样、Stage 2 必须复现这样"的可执行契约。没有 baseline，Stage 2 重写既无验收口径也无回归测试。
+
+- **业务用途**：把 servicer + remit_date 双锁定下的 validation 报告冻结成"唯一真值文件"——`baselines/mrc/2026-04-30/validation_report.xlsx`——并把它的每一个可验证属性（sheet 数、列顺序、表头颜色、number_format、高亮分布等）写成 1.6 Baseline XLSX 行为 (baseline.zh.md) 的契约清单。
+- **它要回答的业务问题 / Business questions answered**：
+    - Stage 2 重写跑完之后，怎么判断"和老系统输出一致"？答：与 baseline 做 cell-identity diff（参见 stage2-mrc-cell-identity-harness）。
+    - 当 Stage 2 输出某 cell 不一致，是 Stage 2 错了，还是 baseline 本身就该改？答：先查本章对该 cell 的契约描述，再决定走 "Stage 2 修复" 还是 "决策变更（decisions.md）"。
+    - openpyxl 在 `inf` / `NaN` 上的行为到底是什么？Stage 2 用不同的 writer（如 xlsxwriter / Rust openpyxl 替代品）会不会出 cell 偏差？
+- **数据口径 / Population**：单一 `(MRC, 2026-04-30)` 实例；5 张 sheet × 实际行数（行数随当期 MRC portfolio 而定，需在物理 baseline 中实测）。
+- **典型读者 / Audience**：Stage 2 渲染器实现者、cell-identity harness 作者、QA acceptance 走查、Stage 1 → Stage 2 gate decision maker。
+- **设计意图 / Design intent**：把"代码 + 数据 + 实测 XLSX"三角形闭环——任何一边变更都必须在另两边留痕。
+- **常见失败场景 / Common failure scenarios**：
+    - Stage 2 用 xlsxwriter 重写，结果默认 font 与 openpyxl 默认不同 → cell-identity diff 全表偏差 → 触发本章 § 7 的"writer 选择"决策；
+    - 上游 SQL 改名一个列 → baseline 的列顺序变化 → 必须 (a) 同步更新本章 § 4–§ 6 + (b) 重新冻结 `baselines/mrc/2026-04-30/`；
+    - 某月 `amt_1m = 0` 出现 `inf` → 老系统在 Excel 里显示为 `1.798e+308`（openpyxl 默认），Stage 2 必须复现否则 cell-identity fail。
+- **风险 / 对账动机 / Risk motivation**：baseline 是 Stage 2 验收的唯一客观证据；本章未覆盖的属性 = Stage 2 可以自由实现的属性 = 未来 regression 的潜在来源；故本章 § 9 的 `[VERIFY]` 列表必须在物理 baseline 落地后**清零**才能开闸 Stage 2 acceptance。
+
+## 2. Scope and conventions
+
+### 2.1 Frozen instance
+
+| 维度 | 值 |
+|---|---|
+| Servicer | `MRC` |
+| `remit_date` | `2026-04-30` |
+| 上游表快照 | `snapshots/2026-04-30/raw/mrc/*.parquet`（5 张 `mrc.*` 表 + 4 张 `port.*` 表） |
+| 物理 baseline 文件 | `baselines/mrc/2026-04-30/validation_report.xlsx`（待 Stage 1.6 收尾时由 `tools/freeze_baseline.py` 产出） |
+| 配套 metadata | `baselines/mrc/2026-04-30/manifest.json`（写入器版本、openpyxl 版本、SHA-256、生成时间） |
+
+### 2.2 Two confidence tiers / 两级置信度
+
+本章每条契约都带 `[FROM-CODE]` 或 `[VERIFY]` 标签：
+
+- `[FROM-CODE]`：**完全由源码确定**，反推自 `gen_remit_validation_report.py`（参见 1.3 Sheet 渲染层 (sheets.zh.md) § 4）。Stage 2 实现可直接以本章描述为契约。
+- `[VERIFY]`：**需要实测物理 XLSX 才能定论**（openpyxl 默认行为、`inf` / `NaN` 表达、column-width auto-fit 实际宽度、freeze panes 是否存在等）。本章给出**最可能的**预期值与查证方法；物理 baseline 落地后必须回填本章并把标签升级到 `[FROM-CODE+VERIFY]`。
+
+### 2.3 Out of scope
+
+- 业务数字本身（具体某 loan 的 begbal 是多少）——这是数据问题，不是渲染契约。
+- 上游 Parquet snapshot 的 schema——见 1.1 原始数据层 (rawdata.zh.md)。
+- Stage 2 实现细节（用哪个 writer、用哪个语言）——本章只定义"必须长成这样"。
+
+## 3. Workbook-level baseline
+
+### 3.1 Sheet inventory and tab order `[FROM-CODE]`
+
+`gen_remit_validation_report.py:1327-1356` 注册 5 个 MRC sheet；renderer 按注册顺序写入 workbook，**最终 XLSX 内 tab 顺序固定如下**：
+
+| Tab 序 | Sheet name | 行数 | 列数 | 高亮列数 | 来源 helper |
+|---|---|---|---|---|---|
+| 1 | `MRC_Summary_check` | 2 (1 header + 1 data) | 14 | 0 | `_summary_columns()` |
+| 2 | `MRC_General_Check` | N+1 | 35 | 7 | `_general_columns("mrc_ln")` |
+| 3 | `MRC_Advance_Check` | N+1 | 27 | 4 | `_advance_columns("mrc_ln")` |
+| 4 | `MRC_ServiceFee_Check` | N+1 | 8 | 1 | `_service_fee_columns("mrc_ln")` |
+| 5 | `MRC_Adv_Info` | M+1 | 7 | 0 | `_adv_info_columns()` |
+
+其中 N = 当期 MRC portfolio 中**有数据的**贷款数（每个 validator 各算各的），M = `(bucket, description, transaction_code)` 聚合后的活动行数。N、M 的具体值待 `[VERIFY]`。
+
+来源：`gen_remit_validation_report.py:1327-1356`；详见 1.3 Sheet 渲染层 (sheets.zh.md) § 4.4。
+
+### 3.2 Workbook-level attributes `[VERIFY]`
+
+| 属性 | 预期值 | 备注 |
+|---|---|---|
+| Workbook 默认 font | ARIAL 12 black non-bold | 1.3 § 4.2 已列；openpyxl 默认值的覆盖关系待实测 |
+| Active tab | tab 1 `MRC_Summary_check` | openpyxl 默认是第一张写入的；待实测 |
+| Workbook properties (creator / title / lastModifiedBy) | openpyxl 默认（unset 或写入器版本字符串） | Stage 2 应复现"unset"以保 cell-identity |
+| Calculation properties | unset | XLSX 文件被 Excel 打开时按需求值，写入器不预先计算 |
+| Defined names | 无 | renderer 不创建任何命名区域 |
+| Shared strings 表条数 | str 列的去重并集 | 待实测，仅作 sanity check 用 |
+
+### 3.3 Per-sheet workbook view attributes `[VERIFY]`
+
+| 属性 | 预期值 |
+|---|---|
+| Freeze panes (`view.freezePanes`) | **未设置**（源码未调用 `freeze_panes`；待实测） |
+| Show gridlines | True（openpyxl 默认） |
+| Show row & column headers | True（openpyxl 默认） |
+| Zoom scale | 100（openpyxl 默认） |
+| Tab color | unset |
+| Sheet visibility | visible |
+
+> ⚠️ 若 `[VERIFY]` 后发现源码确未冻结表头，但用户体验上"第一行表头滚动消失"——会成为 Stage 2 改进建议（落到 `decisions.md` 而非默默改 baseline）。
+
+## 4. Header baseline
+
+### 4.1 Common header attributes `[FROM-CODE]`
+
+`gen_remit_validation_report.py:1742-1761` (`header_format`) 对每张 sheet 都跑一次。**所有**表头单元格（无论是否高亮列）：
+
+| 属性 | 值 | 源码 |
+|---|---|---|
+| Font name | `ARIAL` | `:19-86` 样式块 |
+| Font size | `12` | 同上 |
+| Font bold | `True` | 同上 |
+| Font color (普通) | 黑色 `#000000` | 同上 |
+| Alignment horizontal | `center` | 同上 |
+| Alignment vertical | `center` | 同上 |
+| Border | 四边细黑 (`Side(style='thin', color='000000')`) | 同上 |
+
+### 4.2 Header fill RGB `[FROM-CODE]`
+
+| 类型 | Fill RGB | Font color | 适用列 |
+|---|---|---|---|
+| **普通表头** (`header_style`) | `bccde9`（淡蓝） | 黑 | 所有非高亮列的表头 |
+| **高亮表头** (`diff_column_header_style`) | `ffc7ce`（粉） | `df5006`（橙） | 12 个高亮列的表头（`MRC_General_Check` × 7 + `MRC_Advance_Check` × 4 + `MRC_ServiceFee_Check` × 1） |
+
+来源：`gen_remit_validation_report.py:19-86`（样式定义）+ `:1742-1761`（应用逻辑）。
+
+### 4.3 Per-sheet header layout `[FROM-CODE]`
+
+| Sheet | 表头行号 | 普通表头列 | 高亮表头列 |
+|---|---|---|---|
+| `MRC_Summary_check` | 1 | 1–14（全部） | 0 |
+| `MRC_General_Check` | 1 | 1–5, 7–8, 10–11, 13–14, 16–20, 22–23, 25–26, 28–35（28 列） | 6, 9, 12, 15, 21, 24, 27（7 列） |
+| `MRC_Advance_Check` | 1 | 1–8, 10–13, 15–18, 20–23, 25–27（23 列） | 9, 14, 19, 24（4 列） |
+| `MRC_ServiceFee_Check` | 1 | 1–6, 8（7 列） | 7（1 列：`servicefee_diff`） |
+| `MRC_Adv_Info` | 1 | 1–7（全部） | 0 |
+
+精确高亮位置见 1.3 Sheet 渲染层 (sheets.zh.md) § 5–§ 9 的 Column catalog。
+
+### 4.4 Header row height `[VERIFY]`
+
+源码未显式设置 row height；预期为 openpyxl 默认（约 15 pt）。物理 baseline 落地后回填确切值。
+
+## 5. Body cell baseline per data_type
+
+### 5.1 `data_type == "money"` `[FROM-CODE]`
+
+逻辑（`gen_remit_validation_report.py:1721-1739`）：
+
+| 值情况 | 写入值 | `number_format` | 备注 |
+|---|---|---|---|
+| 空 / `None` / `NaN` | `0`（强转） | `$#,##0`（`money_int_format`） | 注意：空与 0 在 XLSX 里不可区分 |
+| 整数值（`value == int(float(value))`） | 原值 | `$#,##0` | 例：`1500.0` → `$1,500` |
+| 非整数 | round 后的原值 | `$#,##0.00`（`money_format`） | round 在 `sheet_df_round` 阶段已完成，2dp |
+
+负值表达由 `number_format` 自身决定：`$#,##0.00` 在 Excel 中负值显示为 `-$1,234.56`（前置负号，无括号）。`[VERIFY]` 实测确认。
+
+适用列：所有 `money` 类型列（详见 1.3 § 5–§ 9 / 1.4 字段定义 (fields.zh.md) 的 data_type 列）。
+
+### 5.2 `data_type == "float"` `[FROM-CODE]`
+
+逻辑：**不**调用 `number_format` 设置。值按 round 后的纯数字写入（`sheet_df_round` 在写入前已 round 到 2dp）。
+
+| 值情况 | 写入值 | `number_format` | Excel 渲染 |
+|---|---|---|---|
+| 普通有限数 | round(value, 2) | `General`（openpyxl 默认） | `1.23` / `-0.05` |
+| `NaN` | NaN | `General` | `[VERIFY]` —— openpyxl 默认行为推测：写入空 cell（NaN 不可序列化为 XML number），但需实测 |
+| `+inf` / `-inf` | inf | `General` | `[VERIFY]` —— openpyxl 写为 OOXML `<v>` 元素值，Excel 可能显示为 `1.7976931348623157E+308` 或抛出 inline error；详见 § 6 |
+
+适用列：`MRC_General_Check` 的所有 `_diff_remitvsdaily` 数字差值 + `intrate_*` 等；`MRC_Adv_Info` 的 `amt_MoM`。
+
+### 5.3 `data_type == "date"` `[FROM-CODE+VERIFY]`
+
+逻辑：renderer 不设 `number_format`；值由 pandas 默认 Excel 序列化（Python `date` / `datetime` → Excel serial number）。
+
+| 属性 | 预期值 |
+|---|---|
+| Cell `value` 类型 | Excel serial number（float） |
+| `number_format` | `[VERIFY]` —— 推测 openpyxl 自动为 datetime 加 `yyyy-mm-dd h:mm:ss`；具体格式需实测 |
+| 时区 | 无（pandas serialized as naive） |
+
+适用列：`asofdate`（所有 5 张 sheet）、`nextduedate_remit` / `nextduedate_daily`（General）、`fctrdt`（ServiceFee）。
+
+### 5.4 `data_type == "str"` `[FROM-CODE]`
+
+逻辑：renderer 不设 `number_format`。值按字符串写入 XLSX shared strings 表。
+
+| 属性 | 值 |
+|---|---|
+| Cell value | 原始字符串 |
+| `number_format` | `General` |
+| 空字符串 | 作为空字符串写入（不强转为 0） |
+
+适用列：`loanid`、`dealid`、`mrc_ln`、`delq_status`、`delinquency_status_mba`、`bucket`、`description`、`transaction_code`。
+
+### 5.5 `data_type == "percentage"` `[N/A FOR MRC]`
+
+MRC 没有任何列使用此类型；列在此处仅为完整性。若误用会套 `0.00%`（`percent_format`）。`intrate_*` 列**故意**声明为 `float` 而非 `percentage` —— 详见 1.3 § 4.2 + 1.4 字段定义 (fields.zh.md) § 5 的 gap 1。
+
+### 5.6 Default body cell attributes `[FROM-CODE]`
+
+无 number_format 影响的、对所有数据类型通用的基础样式（来自 `gen_remit_validation_report.py:19-86` 默认样式块）：
+
+| 属性 | 值 |
+|---|---|
+| Font name | `ARIAL` |
+| Font size | `12` |
+| Font color | 黑 `#000000`（diff 高亮单元格除外，见 § 6） |
+| Font bold | `False`（diff 高亮单元格除外） |
+| Alignment horizontal | 默认（openpyxl 不显式设置——按数字 / 字符串各自默认） |
+| Alignment vertical | `[VERIFY]` |
+| Border | 四边细黑 `Side(style='thin', color='000000')` |
+
+## 6. Diff highlight cell baseline
+
+### 6.1 Trigger condition `[FROM-CODE]`
+
+`diff_cell_format` (`gen_remit_validation_report.py:1764-1798`)：对每张 sheet 的每个高亮列 `c`：
+
+```text
+mask = pd.to_numeric(df[c], errors='coerce').abs() > 0
+```
+
+`mask == True` 的行被刷为 diff 样式。详细规则参见 1.5 验证规则 (rules.zh.md) § 3.1 与 § 3.2。
+
+| 值情况 | 是否高亮 | 备注 |
+|---|---|---|
+| 数字 > 0 或 < 0 | ✅ 高亮 | 严格 `> 0`，等于 0 不高亮 |
+| `0` | ❌ 不高亮 | 业务上 "正好对齐" |
+| `NaN` / `None` | ❌ 不高亮 | `pd.to_numeric(errors='coerce')` → `NaN`，`NaN.abs() > 0` 为 `False` |
+| 非数字字符串 | ❌ 不高亮 | coerce 为 `NaN` |
+
+### 6.2 Diff cell style `[FROM-CODE]`
+
+| 属性 | 值 | 源码 |
+|---|---|---|
+| Fill RGB | `ffc7ce`（粉） | `:19-86` `diff_column_style` |
+| Font color | `df5006`（橙） | 同上 |
+| Font bold | 继承 body 默认（False） | `[VERIFY]` |
+| Font name / size | `ARIAL` / `12`（与 body 一致） | 同上 |
+| Border | 与 body 一致（四边细黑） | 同上 |
+| `number_format` | 继承列的 `data_type` 决定的格式 | diff 不重设 number_format |
+
+### 6.3 12 个高亮列的分布 `[FROM-CODE]`
+
+| Sheet | 高亮列名 | 数量 |
+|---|---|---|
+| `MRC_General_Check` | `intrate_diff_remitvsdaily`, `nextduedate_diff_remitvsdaily`, `begbal_diff_remitvsdaily`, `endbal_diff_remitvsdaily`, `deferredprincipal_diff_remitvsdaily`, `deferredint_diff_remitvsdaily`, `pandi_schedule_diff_remitvsdaily` | 7 |
+| `MRC_Advance_Check` | `escadv_diff_remitvsdaily`, `recovcorpadv_diff_remitvsdaily`, `nonrecovcorpadv_diff_remitvsdaily`, `totalcorpadv_diff_remitvsdaily` | 4 |
+| `MRC_ServiceFee_Check` | `servicefee_diff` | 1 |
+| **总计** | | **12** |
+
+来源：`gen_remit_validation_report.py:1331-1339, 1345-1348, 1354`。
+
+### 6.4 "Should-have-been-highlighted but isn't" 已知设计豁免 `[FROM-CODE]`
+
+- `pandi_diff_remitvsdaily`（`MRC_General_Check` 第 31 列）—— actual P&I 差值，**有意**不在高亮列表内（noise floor 太高）；详见 1.3 § 6.1 gap 1 与 1.5 验证规则 (rules.zh.md)。
+
+## 7. Column widths and miscellaneous body attributes
+
+### 7.1 Column width `[FROM-CODE+VERIFY]`
+
+`automatic_column_width: True`（参见 1.3 § 4.2）使 renderer 按内容自动拉宽，回退默认 `default_column_width = 20`。**实际宽度**因数据而异，必须实测：
+
+| Sheet | 列 | 预期宽度（unit = openpyxl 默认 width unit ≈ char width） |
+|---|---|---|
+| 所有 | `asofdate` | `[VERIFY]` —— `10` (e.g. `2026-04-30`) |
+| `MRC_Adv_Info` | `description` | `[VERIFY]` —— 取决于最长字符串 |
+| `MRC_General_Check` | `delinquency_status_mba` | `[VERIFY]` |
+| 其他 | 数字 / 短字符串列 | `[VERIFY]` —— 多数预期 `20` |
+
+物理 baseline 落地后回填精确值列表到本节。
+
+### 7.2 Empty sheet / empty DataFrame fallback `[FROM-CODE]`
+
+若某 validator 因异常返回 `None`（详见 1.5 § 9.1），其在 `VALIDATION_TABLE_MAP` 中的 entry 为 `None`，renderer 静默跳过 → **该 sheet tab 不会出现在 XLSX 中**。Cell-identity harness 必须：
+
+- 若 baseline 5 张 sheet 齐全，Stage 2 也必须 5 张全；
+- 若 baseline 缺某 sheet（已知 validator 失败 / silent skip），Stage 2 也必须缺同一张。
+
+## 8. Edge cases requiring physical verification
+
+### 8.1 `±inf` rendering `[VERIFY]`
+
+`MRC_Adv_Info.amt_MoM = amt / amt_1m - 1` 在 `amt_1m == 0` 时产生 `+inf` 或 `-inf`（依 `amt` 符号）。`data_type_format` **不**给 float 列套 number_format，openpyxl 默认行为最可能：
+
+- 写为 OOXML `<v>` 元素值，文本为 `inf` / `1.7976931348623157E+308`（Python `repr(float('inf'))` = `'inf'`，但 openpyxl 在 worksheet `_write_cell` 中会做 `str(value)` 写入）；
+- Excel 打开后渲染为 `#NUM!` 或字符串 `inf`，取决于 Excel 版本。
+
+**Stage 2 必须先实测 baseline 的实际表达再决定如何复现**。若 baseline 是 `inf` 字符串，Stage 2 写入同样字符串；若是 `#NUM!`，Stage 2 触发 Excel 错误对象。
+
+### 8.2 `NaN` rendering `[VERIFY]`
+
+可能出现在：
+
+- `MRC_General_Check` reindex 时缺列被补 `np.nan`（仅当 SQL 投影缺列时发生，已验证当前 SQL 不缺，故此路径死代码——但 Stage 2 必须保留行为）；
+- `MRC_ServiceFee_Check.servicefee_diff` 当 `port.portmonth` outer-join 缺 loan 时为 `NaN`（gap 4 静默漏报）。
+
+openpyxl 默认行为预期：写为空 cell（NaN 不能序列化为 OOXML number）。`[VERIFY]`。
+
+### 8.3 Empty money cells `[FROM-CODE]`
+
+`data_type_format` 把空 money 单元格强转为 `0`（套 `$#,##0`）。所以**baseline 中不会出现空的 money cell**——所有 money 列要么数字、要么 `$0`。
+
+### 8.4 Date cells with `None` `[VERIFY]`
+
+若某 date 列出现 `None`（例如 `nextduedate_daily` 缺失），pandas 默认写空 cell。`[VERIFY]`。
+
+## 9. Verification checklist (gating Stage 2 acceptance)
+
+物理 baseline `baselines/mrc/2026-04-30/validation_report.xlsx` 落地后，下表 **每一项必须从 `[VERIFY]` 升级到 `[CONFIRMED]`** 才允许开闸 Stage 2 acceptance。
+
+| # | 项 | 章节 | 当前 | 目标 |
+|---|---|---|---|---|
+| V1 | Workbook 默认 font 实际写入值 | § 3.2 | `[VERIFY]` | `[CONFIRMED]` |
+| V2 | 各 sheet 是否设 freeze_panes | § 3.3 | `[VERIFY]` | `[CONFIRMED]` |
+| V3 | 数据行数 N (general/advance/service_fee) 与 M (adv_info) | § 3.1 | `[VERIFY]` | `[CONFIRMED]` |
+| V4 | Header row height | § 4.4 | `[VERIFY]` | `[CONFIRMED]` |
+| V5 | money 负值 number_format 实际渲染 | § 5.1 | `[VERIFY]` | `[CONFIRMED]` |
+| V6 | float `NaN` 实际写入形态 | § 5.2 / § 8.2 | `[VERIFY]` | `[CONFIRMED]` |
+| V7 | float `±inf` 实际写入形态 | § 5.2 / § 8.1 | `[VERIFY]` | `[CONFIRMED]` |
+| V8 | date 列 `number_format` 实际值 | § 5.3 | `[VERIFY]` | `[CONFIRMED]` |
+| V9 | body cell vertical alignment | § 5.6 | `[VERIFY]` | `[CONFIRMED]` |
+| V10 | diff cell font bold 是否继承 | § 6.2 | `[VERIFY]` | `[CONFIRMED]` |
+| V11 | 各列 auto-fit width 实测值表 | § 7.1 | `[VERIFY]` | `[CONFIRMED]` |
+| V12 | date `None` 单元格表达 | § 8.4 | `[VERIFY]` | `[CONFIRMED]` |
+
+## 10. How to produce the physical baseline
+
+### 10.1 Tooling contract
+
+```text
+tools/freeze_baseline.py mrc 2026-04-30
+  ⟶ baselines/mrc/2026-04-30/validation_report.xlsx
+  ⟶ baselines/mrc/2026-04-30/manifest.json
+     {
+       "servicer": "MRC",
+       "remit_date": "2026-04-30",
+       "generated_at_utc": "...",
+       "writer": "openpyxl",
+       "writer_version": "...",
+       "python_version": "...",
+       "sha256": "...",
+       "snapshot_source": "snapshots/2026-04-30/raw/mrc/"
+     }
+```
+
+`tools/freeze_baseline.py` 待实现（属于 `mrc-source-baseline` todo）；其责任是：
+
+1. 加载 frozen Parquet snapshot；
+2. 调用原始 PrefectFlow `util/gen_remit_validation_report.py` 的入口（通过 thin Redshift-adapter-reads-Parquet shim，参见 `mrc-source-baseline` todo）；
+3. 写入 `baselines/mrc/2026-04-30/validation_report.xlsx`；
+4. 计算 SHA-256 并落 manifest。
+
+### 10.2 Verification workflow
+
+1. 运行 `tools/freeze_baseline.py mrc 2026-04-30` 生成物理文件；
+2. 用 `tools/inspect_baseline.py mrc 2026-04-30`（待实现）跑 § 9 的 12 项 V 检查，把结果回填本章；
+3. 把 § 9 表升级到 `[CONFIRMED]`、bump `修订历史` 为 v2 并在 `decisions.md` 留一条记录；
+4. `git add` baseline 文件 + manifest；考虑大小决定是否走 git-lfs（baselines 不在 `.gitignore` 默认排除，可纳管）。
+
+## 11. Source citation index
+
+| 子系统 | 文件 + 行 | 用途 |
+|---|---|---|
+| Style block | `util/gen_remit_validation_report.py:19-86` | 所有 `*_format`、`*_style`、字体 / 颜色 / 边框定义 |
+| Helper functions | `util/gen_remit_validation_report.py:1157-1177` | `_validation_report_col`、`_validation_report_sheet` |
+| 5 个 MRC sheet 注册条目 | `util/gen_remit_validation_report.py:1327-1356` | sheet name → helper + highlight |
+| `data_type_format` 渲染 | `util/gen_remit_validation_report.py:1721-1739` | money / percentage / 其它的 number_format 决策 |
+| `header_format` | `util/gen_remit_validation_report.py:1742-1761` | 普通 / 高亮表头样式应用 |
+| `diff_cell_format` | `util/gen_remit_validation_report.py:1764-1798` | 高亮列 mask + 单元格刷样式 |
+| `MRC_Summary_check` 列 helper | `util/gen_remit_validation_report.py:1180-1196` | 14 列定义 |
+| `MRC_General_Check` 列 helper | `util/gen_remit_validation_report.py:1199-1236` | 35 列定义 |
+| `MRC_Advance_Check` 列 helper | `util/gen_remit_validation_report.py:1239-1268` | 27 列定义 |
+| `MRC_ServiceFee_Check` 列 helper | `util/gen_remit_validation_report.py:1271-1281` | 8 列定义 |
+| `MRC_Adv_Info` 列 helper | `util/gen_remit_validation_report.py:1284-1293` | 7 列定义 |
+
+更多渲染细节交叉引用：1.3 Sheet 渲染层 (sheets.zh.md) § 4；规则交叉引用：1.5 验证规则 (rules.zh.md) § 3。

@@ -19,6 +19,7 @@ PAIRS = [
     ("mrc/sheets.zh.md", "mrc/sheets.en.md"),
     ("mrc/fields.zh.md", "mrc/fields.en.md"),
     ("mrc/rules.zh.md", "mrc/rules.en.md"),
+    ("mrc/baseline.zh.md", "mrc/baseline.en.md"),
     ("arvest/_pending.zh.md", "arvest/_pending.en.md"),
     ("cc5/_pending.zh.md", "cc5/_pending.en.md"),
     ("selene/_pending.zh.md", "selene/_pending.en.md"),

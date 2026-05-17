@@ -89,6 +89,7 @@ nav:
           - 1.3 Sheets: mrc/sheets.md
           - 1.4 Fields: mrc/fields.md
           - 1.5 Rules: mrc/rules.md
+          - 1.6 Baseline: mrc/baseline.md
   - Pending servicers:
       - Arvest: arvest/_pending.md
       - CC5: cc5/_pending.md
