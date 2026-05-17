@@ -193,3 +193,22 @@ Expected outcome:
 
 ## prompt 39
 [📷 copilot-image-f8fdd3.png] 这个SH1/SH2/V1/V2 是什么意思？请注释说明，他们并没有在图上显示出来
+
+## 2026-05-17 — Stage 2 B1 feature-list
+
+## prompt 40
+You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox`.
+
+# Your task: B1 — Stage 2 feature-list (bilingual)
+
+## Context
+We just closed Stage 1 (reverse-engineering docs for MRC validation report under `docs/mrc/1.0-toc … 1.6-baseline.{zh,en}.md`). Now Stage 2 designs a NEW system that is:
+1. **Cell-identical** to the current MRC Validation Report XLSX
+2. Provides 8 interactive UI features (defined in user "prompt 19" — see below)
+3. Extensible to other servicers (Arvest, CC5, Selene, SLS) via registry slots
+
+The user's original "prompt 19" 8-feature spec is embedded across:
+- Earlier session checkpoints `007-v9-1-mrc-only-pivot-with-place.md`, `006-stage-1-shellpoint-chapter-dra.md`, `008-stage-1-mrc-toc-drafted.md`. Read these from `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\checkpoints\` first.
+- v6 archived plan at `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\files\plan-v9.1-draft.md`
+
+[... full task prompt — see commit message for full text ...]
