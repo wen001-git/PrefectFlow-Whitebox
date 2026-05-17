@@ -212,3 +212,23 @@ The user's original "prompt 19" 8-feature spec is embedded across:
 - v6 archived plan at `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\files\plan-v9.1-draft.md`
 
 [... full task prompt — see commit message for full text ...]
+
+## 2026-05-17 — Stage 2 B5 UI architecture
+
+## prompt 41
+You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox`.
+
+# Your task: B5 — Stage 2 UI architecture (bilingual)
+
+## Context
+Stage 2 UI must surface 8 interactive features (from "prompt 19" — see B1's deliverable when ready, but you don't need to wait — recover the 8 features yourself from session checkpoints `007-v9-1-mrc-only-pivot-with-place.md` and `008-stage-1-mrc-toc-drafted.md` at `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\checkpoints\`).
+
+The UI must:
+- Display the validation report (5 MRC sheets — see `docs/mrc/1.3-sheets.zh.md`)
+- Support cell-click drill-down (raw data lineage)
+- Show validator trace (which rule fired, why)
+- Show side-by-side diff vs baseline
+- Be servicer-agnostic — registry-driven sheet rendering
+- Tech-stack DEFERRED (Q2 in plan.md § 5 is unanswered) — present trade-offs
+
+[... full deliverables spec — see commit message ...]
