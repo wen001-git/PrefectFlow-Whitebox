@@ -4,7 +4,7 @@ Freeze the exact MRC validator input dataset to local files so Stage 2
 development is decoupled from live Redshift. See session plan.md section 4.2
 for the binding spec and `decisions.md` 2026-05-17 entry "G2 redefinition".
 
-This tool has two subcommands:
+This tool has three subcommands:
 
   plan   — static-extract SQL literals from legacy `flow/remit_validation/
            {servicer}_db.py` and `{servicer}_validation.py`, write one
@@ -19,6 +19,12 @@ This tool has two subcommands:
            credentials.** Operator step (user or colleague). Currently
            a NotImplementedError stub — implement in the operator's
            environment so credentials never enter this repo.
+
+  verify — validate a populated input_snapshots/ folder.  Checks
+           coverage parity, manifest schema, file/checksum integrity,
+           SQL hash binding, schema sanity, and fan-out consistency.
+           **No Redshift access required.**  Exits 0 on full pass,
+           1 on any core failure, 2 on strict-only failure.
 
 Folder layout produced under `<out>`:
 
@@ -44,6 +50,8 @@ self-test only.
 
 v2.0 (G2a A1): exhaustive SQL coverage scan — recursive import walker,
 8-pattern detection, _coverage.md output, --min-expected gate.
+v2.1 (G2a A3): --resolve flag; template/ + resolved/ split; _bindings.json.
+v2.2 (G2a A4): verify subcommand; C1–C8 checks; _verify_report.json.
 """
 
 from __future__ import annotations
@@ -62,7 +70,7 @@ from pathlib import Path
 from typing import Any
 
 MANIFEST_VERSION = "1.0"
-TOOL_VERSION = "2.1"
+TOOL_VERSION = "2.2"
 
 # Known placeholder → human-readable resolution hint
 _PLACEHOLDER_HINTS: dict[str, str] = {
@@ -1015,6 +1023,468 @@ def cmd_plan(args: argparse.Namespace) -> int:  # noqa: C901
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Verify helpers
+# ---------------------------------------------------------------------------
+
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _sha256_of_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _parse_coverage_md_mrc_owners(coverage_path: Path) -> list[str]:
+    """Extract MRC-relevant owner names from _coverage.md table rows (lines with ✅)."""
+    owners: list[str] = []
+    for line in coverage_path.read_text(encoding="utf-8").splitlines():
+        if "| ✅ |" not in line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        non_empty = [p for p in parts if p]
+        if len(non_empty) >= 2:
+            owner_raw = non_empty[1]  # backtick-quoted in md: `owner_name`
+            owner = owner_raw.strip("`")
+            if owner:
+                owners.append(owner)
+    return owners
+
+
+def _compute_expected_logical_names(plan_entries: list[dict]) -> list[str]:
+    """Derive expected manifest logical_names from MRC-relevant plan_index entries.
+
+    Fan-out entries (multiple resolved_paths) produce one expected name per variant
+    (the SQL file stem without extension). Non-fan-out entries use their logical_name.
+    """
+    names: list[str] = []
+    for entry in plan_entries:
+        if not entry.get("mrc_relevant"):
+            continue
+        resolved = entry.get("resolved_paths", [])
+        if len(resolved) > 1:
+            for rpath in resolved:
+                names.append(Path(rpath).stem)
+        else:
+            names.append(entry["logical_name"])
+    return names
+
+
+def _run_verify_checks(  # noqa: C901
+    out_dir: Path,
+    servicer: str,
+    remit_date: str,
+    strict: bool,
+    verbose: bool,
+) -> tuple[list[dict], int]:
+    """Run all verify checks C1–C8. Returns (check_results, exit_code)."""
+    checks: list[dict] = []
+
+    def record(check_id: str, passed: bool, message: str, details: list[str] | None = None) -> None:
+        checks.append({
+            "check": check_id,
+            "passed": passed,
+            "message": message,
+            "details": details or [],
+        })
+
+    queries_dir = out_dir / "_export_queries"
+    coverage_path = queries_dir / "_coverage.md"
+    plan_index_path = out_dir / "_plan_index.json"
+    manifest_path = out_dir / "_manifest.json"
+    bindings_path = out_dir / "_bindings.json"
+
+    # --- Load _plan_index.json ---
+    plan_entries: list[dict] = []
+    if plan_index_path.exists():
+        try:
+            plan_data = json.loads(plan_index_path.read_text(encoding="utf-8"))
+            plan_entries = plan_data.get("entries", [])
+        except Exception as exc:
+            record("C0-preflight", False, f"Cannot parse _plan_index.json: {exc}")
+
+    # --- Load _coverage.md (best-effort; used for C1 supplemental check) ---
+    coverage_owners: list[str] = []
+    if coverage_path.exists():
+        try:
+            coverage_owners = _parse_coverage_md_mrc_owners(coverage_path)
+        except Exception:
+            pass
+
+    # --- Load _manifest.json ---
+    manifest_entries: list[dict] = []
+    manifest_exists = manifest_path.exists()
+    if manifest_exists:
+        try:
+            manifest_raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(manifest_raw, list):
+                manifest_entries = manifest_raw
+            elif isinstance(manifest_raw, dict):
+                manifest_entries = manifest_raw.get("entries", [])
+        except Exception as exc:
+            manifest_exists = False
+            record("C0-preflight", False, f"Cannot parse _manifest.json: {exc}")
+
+    if not manifest_exists:
+        for cid in ["C1-coverage-parity", "C2-schema-completeness",
+                    "C3-file-existence-checksum", "C4-sql-hash-binding",
+                    "C5-schema-sanity", "C6-fanout-consistency"]:
+            record(cid, False, "_manifest.json does not exist — run export first")
+        if strict:
+            record("C7-bindings-doc", False, "_manifest.json does not exist")
+            record("C8-storage-policy", False, "_manifest.json does not exist")
+        return checks, 1
+
+    manifest_by_name: dict[str, dict] = {
+        e.get("logical_name", ""): e for e in manifest_entries
+    }
+
+    # ---- C1: Coverage parity ----
+    expected_names = _compute_expected_logical_names(plan_entries)
+    missing_from_manifest = [n for n in expected_names if n not in manifest_by_name]
+    orphan_in_manifest = [n for n in manifest_by_name if n and n not in expected_names]
+
+    if not missing_from_manifest and not orphan_in_manifest:
+        record("C1-coverage-parity", True,
+               f"All {len(expected_names)} expected datasets present; no orphans")
+    else:
+        details: list[str] = []
+        if missing_from_manifest:
+            details.append(
+                f"Missing from manifest ({len(missing_from_manifest)}): "
+                + ", ".join(missing_from_manifest)
+            )
+        if orphan_in_manifest:
+            details.append(
+                f"Orphan in manifest ({len(orphan_in_manifest)}): "
+                + ", ".join(orphan_in_manifest)
+            )
+        record("C1-coverage-parity", False,
+               f"{len(missing_from_manifest)} missing, {len(orphan_in_manifest)} orphan(s)",
+               details)
+
+    # ---- C2: Manifest schema completeness ----
+    _REQUIRED_FIELDS = [
+        "logical_name", "source", "export_sql_path", "filter",
+        "exported_at", "exporter", "format", "path",
+        "row_count", "column_count", "columns", "sha256_file", "sha256_canonical_rows",
+    ]
+    c2_errors: list[str] = []
+    for entry in manifest_entries:
+        name = entry.get("logical_name") or "<unnamed>"
+        for fld in _REQUIRED_FIELDS:
+            val = entry.get(fld)
+            if val is None:
+                c2_errors.append(f"{name}: '{fld}' is null/missing")
+            elif isinstance(val, str) and not val:
+                c2_errors.append(f"{name}: '{fld}' is empty string")
+            elif fld == "columns" and isinstance(val, list) and not val:
+                c2_errors.append(f"{name}: 'columns' is empty list")
+
+        rc = entry.get("row_count")
+        if rc is not None and (not isinstance(rc, (int, float)) or rc <= 0):
+            c2_errors.append(f"{name}: row_count must be > 0, got {rc!r}")
+        cc = entry.get("column_count")
+        if cc is not None and (not isinstance(cc, (int, float)) or cc <= 0):
+            c2_errors.append(f"{name}: column_count must be > 0, got {cc!r}")
+
+        sha_file = entry.get("sha256_file")
+        if sha_file and not _SHA256_RE.match(str(sha_file)):
+            c2_errors.append(f"{name}: sha256_file is not a 64-char hex: {sha_file!r}")
+
+        sha_rows = entry.get("sha256_canonical_rows")
+        if sha_rows is not None and sha_rows != "__skipped__":
+            if not _SHA256_RE.match(str(sha_rows)):
+                c2_errors.append(
+                    f"{name}: sha256_canonical_rows is not 64-char hex "
+                    f"or '__skipped__': {sha_rows!r}"
+                )
+
+    if not c2_errors:
+        record("C2-schema-completeness", True,
+               f"All {len(manifest_entries)} entries pass schema check")
+    else:
+        record("C2-schema-completeness", False,
+               f"{len(c2_errors)} schema violation(s)", c2_errors[:20])
+
+    # ---- C3: File existence + checksum ----
+    c3_errors: list[str] = []
+    for entry in manifest_entries:
+        name = entry.get("logical_name") or "<unnamed>"
+        file_path_raw = entry.get("path", "")
+        if file_path_raw:
+            fp = Path(file_path_raw)
+            file_path = fp if fp.is_absolute() else out_dir / fp
+            if not file_path.exists():
+                c3_errors.append(f"{name}: data file not found: {file_path_raw}")
+            else:
+                sha_file = entry.get("sha256_file")
+                if sha_file and _SHA256_RE.match(str(sha_file)):
+                    actual_sha = _sha256_of_file(file_path)
+                    if actual_sha != sha_file:
+                        c3_errors.append(
+                            f"{name}: sha256_file mismatch "
+                            f"(expected {sha_file[:8]}…, got {actual_sha[:8]}…)"
+                        )
+        sql_path_raw = entry.get("export_sql_path", "")
+        if sql_path_raw:
+            sp = Path(sql_path_raw)
+            sql_path = sp if sp.is_absolute() else out_dir / sp
+            if not sql_path.exists():
+                c3_errors.append(f"{name}: SQL file not found: {sql_path_raw}")
+
+    if not c3_errors:
+        record("C3-file-existence-checksum", True,
+               f"All {len(manifest_entries)} data + SQL files verified")
+    else:
+        record("C3-file-existence-checksum", False,
+               f"{len(c3_errors)} file/checksum error(s)", c3_errors[:20])
+
+    # ---- C4: SQL hash binding (light; only checks optional sql_sha256 field) ----
+    c4_errors: list[str] = []
+    for entry in manifest_entries:
+        name = entry.get("logical_name") or "<unnamed>"
+        sql_path_raw = entry.get("export_sql_path", "")
+        sql_sha = entry.get("sql_sha256")
+        if sql_path_raw and sql_sha:
+            sp = Path(sql_path_raw)
+            sql_path = sp if sp.is_absolute() else out_dir / sp
+            if sql_path.exists():
+                actual = hashlib.sha256(sql_path.read_bytes()).hexdigest()
+                if actual != sql_sha:
+                    c4_errors.append(
+                        f"{name}: sql_sha256 mismatch "
+                        f"(expected {sql_sha[:8]}…, got {actual[:8]}…)"
+                    )
+
+    if not c4_errors:
+        record("C4-sql-hash-binding", True,
+               f"SQL hash check passed (optional field; {len(manifest_entries)} entries)")
+    else:
+        record("C4-sql-hash-binding", False,
+               f"{len(c4_errors)} SQL hash mismatch(es)", c4_errors)
+
+    # ---- C5: Schema sanity ----
+    c5_errors: list[str] = []
+    for entry in manifest_entries:
+        name = entry.get("logical_name") or "<unnamed>"
+        columns = entry.get("columns", [])
+        column_count = entry.get("column_count")
+        if column_count is not None and isinstance(columns, list):
+            if len(columns) != int(column_count):
+                c5_errors.append(
+                    f"{name}: column_count={column_count} but len(columns)={len(columns)}"
+                )
+        if isinstance(columns, list):
+            col_names: list[str] = []
+            for i, col in enumerate(columns):
+                if not isinstance(col, dict):
+                    c5_errors.append(f"{name}: columns[{i}] is not a dict")
+                    continue
+                cname = col.get("name", "")
+                dtype = col.get("dtype", "")
+                if not cname:
+                    c5_errors.append(f"{name}: columns[{i}].name is empty")
+                else:
+                    col_names.append(cname)
+                if not dtype:
+                    c5_errors.append(f"{name}: columns[{i}].dtype is empty")
+            if len(col_names) != len(set(col_names)):
+                dupes = list({n for n in col_names if col_names.count(n) > 1})
+                c5_errors.append(f"{name}: duplicate column names: {dupes}")
+
+    if not c5_errors:
+        record("C5-schema-sanity", True,
+               f"All {len(manifest_entries)} entries pass schema sanity")
+    else:
+        record("C5-schema-sanity", False,
+               f"{len(c5_errors)} schema sanity violation(s)", c5_errors[:20])
+
+    # ---- C6: Resolved-vs-template consistency ----
+    c6_errors: list[str] = []
+    for entry in plan_entries:
+        if not entry.get("mrc_relevant"):
+            continue
+        resolved = entry.get("resolved_paths", [])
+        if len(resolved) > 1:
+            for rpath in resolved:
+                variant_name = Path(rpath).stem
+                if variant_name not in manifest_by_name:
+                    c6_errors.append(
+                        f"Fan-out variant missing from manifest: {variant_name}"
+                    )
+
+    if not c6_errors:
+        record("C6-fanout-consistency", True,
+               "All fan-out variants present in manifest")
+    else:
+        record("C6-fanout-consistency", False,
+               f"{len(c6_errors)} fan-out variant(s) missing", c6_errors)
+
+    # ---- C7: Bindings doc (--strict only) ----
+    if strict:
+        c7_errors: list[str] = []
+        if not bindings_path.exists():
+            c7_errors.append("_bindings.json does not exist")
+        else:
+            try:
+                bindings_data = json.loads(bindings_path.read_text(encoding="utf-8"))
+                bd_bindings: dict[str, str] = bindings_data.get("bindings", {})
+                resolved_dir = queries_dir / "resolved"
+                if resolved_dir.exists():
+                    for sql_file in sorted(resolved_dir.glob("*.sql")):
+                        content = sql_file.read_text(encoding="utf-8")
+                        for line in content.splitlines():
+                            if line.startswith("-- BINDINGS:"):
+                                bindings_str = line[len("-- BINDINGS:"):].strip()
+                                if bindings_str == "(none)":
+                                    break
+                                for kv in bindings_str.split(", "):
+                                    if "=" in kv:
+                                        k, v = kv.split("=", 1)
+                                        k, v = k.strip(), v.strip()
+                                        if k in bd_bindings and bd_bindings[k] != v:
+                                            c7_errors.append(
+                                                f"{sql_file.name}: binding {k}={v!r} "
+                                                f"conflicts with _bindings.json ({k}={bd_bindings[k]!r})"
+                                            )
+                                break
+            except Exception as exc:
+                c7_errors.append(f"Cannot parse _bindings.json: {exc}")
+
+        if not c7_errors:
+            record("C7-bindings-doc", True,
+                   "_bindings.json present and consistent with resolved SQL headers")
+        else:
+            record("C7-bindings-doc", False,
+                   f"{len(c7_errors)} bindings inconsistency(ies)", c7_errors)
+
+    # ---- C8: Storage policy (--strict only) ----
+    if strict:
+        c8_errors: list[str] = []
+        gitignore_path: Path | None = None
+        for parent in [out_dir, *out_dir.parents]:
+            candidate = parent / ".gitignore"
+            if candidate.exists():
+                gitignore_path = candidate
+                break
+
+        if gitignore_path is None:
+            c8_errors.append("No .gitignore found in directory tree")
+        else:
+            gi_text = gitignore_path.read_text(encoding="utf-8")
+            if "parquet/" not in gi_text and "*.parquet" not in gi_text:
+                c8_errors.append(".gitignore has no rule for parquet/ or *.parquet")
+            if "csv/" not in gi_text and "*.csv" not in gi_text:
+                c8_errors.append(".gitignore has no rule for csv/ or *.csv")
+
+        for entry in manifest_entries:
+            name = entry.get("logical_name") or "<unnamed>"
+            fmt = entry.get("format", "")
+            epath = entry.get("path", "")
+            if fmt and epath:
+                ext = Path(epath).suffix.lower()
+                if fmt == "parquet" and ext != ".parquet":
+                    c8_errors.append(
+                        f"{name}: format=parquet but path has extension {ext!r}"
+                    )
+                elif fmt == "csv" and ext != ".csv":
+                    c8_errors.append(
+                        f"{name}: format=csv but path has extension {ext!r}"
+                    )
+
+        if not c8_errors:
+            record("C8-storage-policy", True,
+                   ".gitignore rules + format/extension consistency verified")
+        else:
+            record("C8-storage-policy", False,
+                   f"{len(c8_errors)} storage policy violation(s)", c8_errors)
+
+    # --- Compute exit code ---
+    _strict_ids = {"C7-bindings-doc", "C8-storage-policy"}
+    core_failed = any(not c["passed"] and c["check"] not in _strict_ids for c in checks)
+    strict_failed = any(not c["passed"] and c["check"] in _strict_ids for c in checks)
+
+    if core_failed:
+        return checks, 1
+    if strict_failed:
+        return checks, 2
+    return checks, 0
+
+
+def cmd_verify(args: argparse.Namespace) -> int:
+    _tool_dir = Path(__file__).parent
+    _repo_root = _tool_dir.parent
+    if args.out is None:
+        args.out = str(
+            _repo_root / "baselines" / args.servicer / args.remit_date / "input_snapshots"
+        )
+
+    out_dir = Path(args.out).resolve()
+    verbose: bool = getattr(args, "verbose", False)
+    strict: bool = getattr(args, "strict", False)
+    json_out: bool = getattr(args, "json", False)
+
+    print(f"[verify] servicer={args.servicer}  remit-date={args.remit_date}")
+    print(f"[verify] snapshot dir: {out_dir}")
+    if strict:
+        print("[verify] --strict mode: C7 and C8 enabled")
+    print()
+
+    checks, exit_code = _run_verify_checks(
+        out_dir, args.servicer, args.remit_date, strict, verbose
+    )
+
+    for check in checks:
+        icon = "✅" if check["passed"] else "❌"
+        print(f"  {icon}  {check['check']}: {check['message']}")
+        if verbose and check["details"]:
+            for detail in check["details"]:
+                print(f"       • {detail}")
+
+    print()
+    passed = sum(1 for c in checks if c["passed"])
+    total = len(checks)
+    print(f"[verify] {passed}/{total} checks passed")
+
+    if exit_code == 0:
+        print("[verify] ✅ All checks passed — snapshot is ready.")
+    elif exit_code == 2:
+        print("[verify] ⚠️  Strict-mode checks (C7/C8) failed; core checks passed.")
+    else:
+        print("[verify] ❌ Checks failed — snapshot is NOT ready for G2a close.")
+        print()
+        print("[OPERATOR] What's still missing:")
+        for check in checks:
+            if not check["passed"]:
+                print(f"  {check['check']}: {check['message']}")
+                for detail in check["details"][:5]:
+                    print(f"    → {detail}")
+
+    if json_out:
+        report = {
+            "servicer": args.servicer,
+            "remit_date": args.remit_date,
+            "snapshot_dir": str(out_dir),
+            "strict": strict,
+            "checks": checks,
+            "passed": passed,
+            "total": total,
+            "exit_code": exit_code,
+        }
+        report_path = out_dir / "_verify_report.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        print(f"[verify] report written → {report_path}")
+
+    return exit_code
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     _tool_dir = Path(__file__).parent
     _repo_root = _tool_dir.parent
@@ -1088,6 +1558,22 @@ def main(argv: list[str] | None = None) -> int:
     p_exp.add_argument("--redshift-conn", default=os.environ.get("REDSHIFT_URL"))
     p_exp.add_argument("--also-csv", action="store_true")
     p_exp.set_defaults(func=cmd_export)
+
+    p_ver = sub.add_parser(
+        "verify",
+        help="validate a populated input_snapshots/ folder (no Redshift needed)",
+    )
+    p_ver.add_argument("--servicer", choices=["mrc"], default="mrc")
+    p_ver.add_argument("--remit-date", default="2026-04-30", dest="remit_date")
+    p_ver.add_argument("--out", default=None,
+                       help="path to input_snapshots/ dir (default: baselines/<servicer>/<remit-date>/input_snapshots)")
+    p_ver.add_argument("--strict", action="store_true",
+                       help="also run C7 (_bindings.json) and C8 (storage policy) checks")
+    p_ver.add_argument("--verbose", "-v", action="store_true",
+                       help="print per-entry details for failed checks")
+    p_ver.add_argument("--json", action="store_true",
+                       help="write machine-readable report to _verify_report.json")
+    p_ver.set_defaults(func=cmd_verify)
 
     args = p.parse_args(argv)
     return args.func(args)

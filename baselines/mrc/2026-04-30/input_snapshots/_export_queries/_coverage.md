@@ -117,3 +117,17 @@ _Resolved SQL files: **9** (template count: 8)_
 - `_export_queries/template/` — verbatim templates (all 21 SQL strings, {placeholder} preserved)
 - `_export_queries/resolved/` — placeholders bound to anchor values; multi-binding templates (e.g. `_mrc_adv_info_sql`) emit one file per binding set
 
+## How to verify
+
+After the operator populates `_manifest.json` and writes Parquet files to `parquet/`, run the
+manifest validator to confirm the snapshot is complete and uncorrupted:
+
+```bash
+python tools/freeze_snapshot.py verify --servicer mrc --remit-date 2026-04-30
+```
+
+Add `--verbose` for per-entry detail on failures, `--strict` to also check `_bindings.json`
+consistency (C7) and `.gitignore` / file-extension policy (C8), or `--json` to write a
+machine-readable `_verify_report.json` alongside the manifest. Exit code 0 = all checks pass
+(snapshot ready to close G2a); 1 = one or more core checks (C1–C6) failed; 2 = strict-only
+checks failed while core checks passed.

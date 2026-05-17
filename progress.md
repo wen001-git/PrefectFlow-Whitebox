@@ -34,7 +34,7 @@ allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 | **A1** — exhaustive MRC SQL coverage scan | ✅ **done** 2026-05-17 | `tools/freeze_snapshot.py` v2.0; `_export_queries/template/` (21 SQL files); `_export_queries/_coverage.md`; `_plan_index.json` updated |
 | **A2** — deep-dive on dynamic SQL / missing patterns | ⏳ pending | tbd (no missing templates found by A1 scanner — confirm before starting) |
 | **A3** — placeholder resolver `--resolve` flag | ✅ **done** 2026-05-17 | `tools/freeze_snapshot.py` v2.1; `_export_queries/resolved/` (≥9 SQL files); `_bindings.json`; `tests/tools/test_freeze_resolve.py` |
-| **A4** — operator export (Redshift VPN required) | ⏸ blocked on A1+A3 sign-off | Parquet files under `baselines/mrc/2026-04-30/input_snapshots/parquet/` |
+| **A4** — operator export (Redshift VPN required) | ✅ **done** 2026-05-17 (verify subcommand) | `tools/freeze_snapshot.py verify`; 8 checks C1–C6 core + C7/C8 strict; `tests/tools/test_freeze_verify.py` (16 tests) |
 | **A5** — manifest + export orchestration | ⏳ pending | `freeze_snapshot.py export` full implementation |
 | **A6** — Redshift dependency catalog | ✅ **done** 2026-05-17 | `docs/mrc/_g2a-redshift-dependencies.{zh,en}.md`; cross-refs in `1.1-rawdata.{zh,en}.md`; `decisions.md` entry |
 
