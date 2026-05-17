@@ -1,12 +1,7 @@
--- auto-extracted by tools/freeze_snapshot.py plan (v2.1)
--- source: flow/remit_validation/mrc_validation.py :: mrc_summary_check (lines 12–30)
--- servicer: mrc  flag: MRC-relevant
--- remit_date: 2026-04-30
--- pattern: f-string
--- placeholders to resolve: mrc_db.fctrdt
--- placeholder hints:
---   mrc_db.fctrdt: factor-date (YYYY-MM-01) for remit cycle, e.g. '2026-05-01'
--- notes: resolve 1 placeholder(s) before export
+-- TEMPLATE: _export_queries/template/mrc__mrc_summary_check_e943649b57cd.sql
+-- BINDINGS: mrc_db.fctrdt=2026-05-01
+-- GENERATED: 2026-05-17
+-- REVIEW BEFORE RUNNING
 
 select
                 sum(principalreceived) as principalreceived,
@@ -24,4 +19,4 @@ select
                 sum(balance) as endingbalance
             from port.portmonth
             where servicer = 'MRC'
-              and fctrdt = '{mrc_db.fctrdt}';
+              and fctrdt = '2026-05-01';

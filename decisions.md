@@ -107,3 +107,7 @@ Every stage todo (Stage 1 chapter or Stage 2 deliverable) must run the test matr
   `baselines/mrc/2026-04-30/input_snapshots/_export_queries/template/`, updated
   `_plan_index.json`, and `_export_queries/_coverage.md`. Scanner gains `--min-expected`
   flag (default 5) for CI gate enforcement.
+
+## 2026-05-17 — G2a A3: placeholder resolver landed
+
+- **2026-05-17 — G2a A3 — placeholder resolver `--resolve` flag added to `freeze_snapshot.py`** — Operator review burden drops to "read resolved SQL, confirm, run"; resolver handles `{mrc_db.fctrdt}`, `{service}`, `{fctrdt}` f-string placeholders + `input_fctrdt`/`input_curr_month_end`/`input_pre_month_end` `.replace()`-style substitutions; `_mrc_adv_info_sql` fans out to 2 resolved variants (fctrdt=2026-05-01 + fctrdt=2026-04-01). `_bindings.json` at `baselines/mrc/2026-04-30/input_snapshots/` is externalisable via `--bindings`.

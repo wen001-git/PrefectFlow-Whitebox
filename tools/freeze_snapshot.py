@@ -25,6 +25,8 @@ Folder layout produced under `<out>`:
     <out>/
       _export_queries/
         template/<logical_name>.sql            (plan + export)
+        resolved/<logical_name>.sql            (plan --resolve, single-binding)
+        resolved/<logical_name>__<k>=<v>.sql   (plan --resolve, fan-out variant)
         _coverage.md                           (plan, human-readable table)
       _plan_index.json                         (plan)
       _manifest.json                           (export)
@@ -60,7 +62,7 @@ from pathlib import Path
 from typing import Any
 
 MANIFEST_VERSION = "1.0"
-TOOL_VERSION = "2.0"
+TOOL_VERSION = "2.1"
 
 # Known placeholder → human-readable resolution hint
 _PLACEHOLDER_HINTS: dict[str, str] = {
@@ -78,6 +80,112 @@ _PLACEHOLDER_HINTS: dict[str, str] = {
     "str(self.remit_date)": "remit date for this cycle (string form)",
     "str(self.pre_date)": "prior month-end date (string form)",
 }
+
+# Built-in MRC 2026-04-30 anchor bindings (used when --resolve without --bindings file)
+_MRC_BUILTIN_BINDINGS: dict[str, str] = {
+    "mrc_db.fctrdt": "2026-05-01",
+    "mrc_db.fctrdt_1m": "2026-04-01",
+    "fctrdt": "2026-05-01",
+    "service": "MRC",
+    "servicer": "MRC",
+    "remit_date": "2026-04-30",
+    "input_fctrdt": "2026-05-01",
+    "input_curr_month_end": "2026-04-30",
+    "input_pre_month_end": "2026-03-31",
+}
+
+# Built-in fan-out: templates that must be emitted once per binding set
+_MRC_BUILTIN_FANOUT: dict[str, list[dict[str, str]]] = {
+    "_mrc_adv_info_sql": [
+        {"fctrdt": "2026-05-01"},
+        {"fctrdt": "2026-04-01"},
+    ],
+}
+
+
+def load_bindings(bindings_path: Path | None) -> tuple[dict[str, str], dict[str, list[dict[str, str]]]]:
+    """Load bindings from a JSON file, or return the built-in MRC defaults."""
+    if bindings_path is None:
+        return _MRC_BUILTIN_BINDINGS, _MRC_BUILTIN_FANOUT
+    data = json.loads(bindings_path.read_text(encoding="utf-8"))
+    bindings = data.get("bindings", {})
+    fanout = data.get("fanout", {})
+    return bindings, fanout
+
+
+def _apply_bindings(
+    sql: str, bindings: dict[str, str]
+) -> tuple[str, dict[str, str]]:
+    """Apply all bindings to a SQL template.
+
+    Handles both:
+    - f-string style: ``{mrc_db.fctrdt}`` → ``2026-05-01``
+    - .replace() style: bare string ``input_fctrdt`` → ``2026-05-01``
+      (these appear as ``'input_fctrdt'`` inside the SQL value literals)
+
+    Returns (resolved_sql, bindings_used).
+    """
+    result = sql
+    used: dict[str, str] = {}
+
+    for key in sorted(bindings, key=len, reverse=True):
+        value = bindings[key]
+        placeholder = "{" + key + "}"
+        if placeholder in result:
+            result = result.replace(placeholder, value)
+            used[key] = value
+
+    for key in sorted(bindings, key=len, reverse=True):
+        value = bindings[key]
+        if key.startswith("input_") and key in result:
+            result = result.replace(key, value)
+            used[key] = value
+
+    return result, used
+
+
+def _unresolved_placeholders(sql: str) -> list[str]:
+    """Return any remaining ``{...}`` placeholders in *sql* after resolution."""
+    return re.findall(r"\{([^{}]+)\}", sql)
+
+
+def resolve_template(
+    owner: str,
+    sql_template: str,
+    bindings: dict[str, str],
+    fanout: dict[str, list[dict[str, str]]],
+) -> list[tuple[str, str, dict[str, str]]]:
+    """Resolve a SQL template to one or more (suffix, resolved_sql, bindings_used) tuples.
+
+    If *owner* is in *fanout*, produces one tuple per fanout binding set.
+    Otherwise produces a single tuple with suffix="".
+
+    Raises ``ValueError`` if any placeholder remains unresolved after all bindings.
+    """
+    fanout_sets = fanout.get(owner)
+    if fanout_sets is None:
+        resolved, used = _apply_bindings(sql_template, bindings)
+        remaining = _unresolved_placeholders(resolved)
+        if remaining:
+            raise ValueError(
+                f"Unresolved placeholder(s) in '{owner}': {remaining}"
+            )
+        return [("", resolved, used)]
+
+    results: list[tuple[str, str, dict[str, str]]] = []
+    for override in fanout_sets:
+        effective = dict(bindings)
+        effective.update(override)
+        resolved, used = _apply_bindings(sql_template, effective)
+        remaining = _unresolved_placeholders(resolved)
+        if remaining:
+            raise ValueError(
+                f"Unresolved placeholder(s) in '{owner}' (fanout {override}): {remaining}"
+            )
+        suffix = "__" + "_".join(f"{k}={v}" for k, v in override.items())
+        results.append((suffix, resolved, used))
+    return results
+
 
 # Chapter 1.2 catalog: MRC SQL templates explicitly documented
 _CHAPTER_12_CATALOG: dict[str, str] = {
@@ -463,6 +571,10 @@ def build_coverage_md(
     servicer: str,
     remit_date: str,
     scan_ts: str,
+    resolve_enabled: bool = False,
+    bindings: dict[str, str] | None = None,
+    fanout: dict[str, list[dict[str, str]]] | None = None,
+    resolved_count: int = 0,
 ) -> str:
     """Build the human-readable ``_coverage.md`` content."""
     source_sha = _get_source_sha(legacy_root)
@@ -593,6 +705,27 @@ def build_coverage_md(
         "`freeze_snapshot.py export` from a host with Redshift VPN + credentials.\n"
     )
 
+    if resolve_enabled and bindings:
+        lines.append("\n## Bindings used for --resolve\n")
+        lines.append("| Placeholder | Resolved value |")
+        lines.append("|---|---|")
+        for k, v in sorted(bindings.items()):
+            lines.append(f"| `{k}` | `{v}` |")
+        if fanout:
+            lines.append("\n### Fan-out templates\n")
+            for owner, sets in fanout.items():
+                lines.append(f"- **`{owner}`** → {len(sets)} resolved variants:")
+                for s in sets:
+                    desc = ", ".join(f"`{k}={v}`" for k, v in s.items())
+                    lines.append(f"  - {desc}")
+        lines.append(f"\n_Resolved SQL files: **{resolved_count}** (template count: {sum(1 for h in hits if h.mrc_relevant)})_\n")
+        lines.append("\n## Template / Resolved split\n")
+        lines.append(
+            "- `_export_queries/template/` — verbatim templates (all 21 SQL strings, {placeholder} preserved)\n"
+            "- `_export_queries/resolved/` — placeholders bound to anchor values; "
+            "multi-binding templates (e.g. `_mrc_adv_info_sql`) emit one file per binding set\n"
+        )
+
     return "\n".join(lines) + "\n"
 
 
@@ -682,6 +815,14 @@ def _hits_to_plan_entries(
 
 
 def cmd_plan(args: argparse.Namespace) -> int:  # noqa: C901
+    # Compute defaults for optional path args
+    _tool_dir = Path(__file__).parent
+    _repo_root = _tool_dir.parent
+    if args.legacy_root is None:
+        args.legacy_root = str(_repo_root.parent / "PrefectFlow")
+    if args.out is None:
+        args.out = str(_repo_root / "baselines" / args.servicer / args.remit_date / "input_snapshots")
+
     legacy_root = Path(args.legacy_root).resolve()
     out_dir = Path(args.out).resolve()
     queries_dir = out_dir / "_export_queries"
@@ -746,15 +887,83 @@ def cmd_plan(args: argparse.Namespace) -> int:  # noqa: C901
             sql_file.write_text(content, encoding="utf-8")
             written_new.append(fname)
 
+    # --- Resolve templates (if --resolve) ---
+    resolved_paths_by_sha: dict[str, list[str]] = {}
+    resolved_errors: list[str] = []
+    bindings: dict[str, str] = {}
+    fanout: dict[str, list[dict[str, str]]] = {}
+
+    if getattr(args, "resolve", False):
+        bindings_path = Path(args.bindings) if args.bindings else None
+        bindings, fanout = load_bindings(bindings_path)
+        resolved_dir = queries_dir / "resolved"
+        resolved_dir.mkdir(parents=True, exist_ok=True)
+
+        gen_date = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+
+        for h in all_hits:
+            if not h.mrc_relevant:
+                continue
+            clean = re.sub(r"[^a-zA-Z0-9_]", "_", h.owner).strip("_")
+            base_fname = f"{args.servicer}__{clean}_{h.sha}"
+            template_rel = f"_export_queries/template/{base_fname}.sql"
+
+            try:
+                variants = resolve_template(h.owner, h.sql_template, bindings, fanout)
+            except ValueError as exc:
+                resolved_errors.append(str(exc))
+                resolved_paths_by_sha[h.sha] = []
+                continue
+
+            paths: list[str] = []
+            for suffix, resolved_sql, used in variants:
+                fname2 = f"{base_fname}{suffix}.sql"
+                bindings_comment = ", ".join(f"{k}={v}" for k, v in sorted(used.items()))
+                header = (
+                    f"-- TEMPLATE: {template_rel}\n"
+                    f"-- BINDINGS: {bindings_comment if bindings_comment else '(none)'}\n"
+                    f"-- GENERATED: {gen_date}\n"
+                    f"-- REVIEW BEFORE RUNNING\n\n"
+                )
+                content2 = header + resolved_sql + "\n"
+                out_file = resolved_dir / fname2
+                out_file.write_text(content2, encoding="utf-8")
+                paths.append(f"_export_queries/resolved/{fname2}")
+
+            resolved_paths_by_sha[h.sha] = paths
+
+    resolved_total = sum(len(v) for v in resolved_paths_by_sha.values())
+
     # --- Write _coverage.md ---
     coverage_md = build_coverage_md(
-        all_hits, scan_files, legacy_root, args.servicer, args.remit_date, scan_ts
+        all_hits, scan_files, legacy_root, args.servicer, args.remit_date, scan_ts,
+        resolve_enabled=bool(getattr(args, "resolve", False)),
+        bindings=bindings,
+        fanout=fanout,
+        resolved_count=resolved_total,
     )
     coverage_path = queries_dir / "_coverage.md"
     coverage_path.write_text(coverage_md, encoding="utf-8")
 
     # --- Write _plan_index.json ---
-    plan_entries = _hits_to_plan_entries(all_hits, args.servicer, legacy_root)
+    plan_entries_json = []
+    for h in all_hits:
+        clean = re.sub(r"[^a-zA-Z0-9_]", "_", h.owner).strip("_")
+        fname2 = f"{args.servicer}__{clean}_{h.sha}.sql"
+        template_rel = f"_export_queries/template/{fname2}"
+        r_paths = resolved_paths_by_sha.get(h.sha, [])
+        plan_entries_json.append({
+            "logical_name": f"{args.servicer}__{h.owner}_{h.sha}",
+            "source_module": h.file_rel,
+            "source_function": h.owner,
+            "sql": h.sql_template,
+            "filter_hints": h.placeholders,
+            "notes": h.notes,
+            "mrc_relevant": h.mrc_relevant,
+            "template_path": template_rel,
+            "resolved_paths": r_paths,
+        })
+
     plan_index = out_dir / "_plan_index.json"
     plan_index.write_text(
         json.dumps(
@@ -771,7 +980,9 @@ def cmd_plan(args: argparse.Namespace) -> int:  # noqa: C901
                 ],
                 "total_sql_strings": len(all_hits),
                 "mrc_relevant_count": sum(1 for h in all_hits if h.mrc_relevant),
-                "entries": [asdict(e) for e in plan_entries],
+                "resolve_enabled": bool(getattr(args, "resolve", False)),
+                "resolved_count": resolved_total,
+                "entries": plan_entries_json,
                 "hits": [asdict(h) for h in all_hits],
             },
             indent=2,
@@ -789,6 +1000,12 @@ def cmd_plan(args: argparse.Namespace) -> int:  # noqa: C901
         print(f"     wrote {len(written_new)} new template SQL(s) under {template_dir}")
     if written_kept:
         print(f"     kept {len(written_kept)} unchanged template SQL(s)")
+    if getattr(args, "resolve", False):
+        print(f"     wrote {resolved_total} resolved SQL file(s) under {queries_dir / 'resolved'}")
+        if resolved_errors:
+            print(f"     [WARN] {len(resolved_errors)} resolution error(s):", file=sys.stderr)
+            for e in resolved_errors:
+                print(f"       - {e}", file=sys.stderr)
     print(f"     wrote _coverage.md → {coverage_path}")
     print(f"     wrote _plan_index.json → {plan_index}")
     print()
@@ -799,6 +1016,13 @@ def cmd_plan(args: argparse.Namespace) -> int:  # noqa: C901
 
 
 def cmd_export(args: argparse.Namespace) -> int:
+    _tool_dir = Path(__file__).parent
+    _repo_root = _tool_dir.parent
+    if args.legacy_root is None:
+        args.legacy_root = str(_repo_root.parent / "PrefectFlow")
+    if args.out is None:
+        args.out = str(_repo_root / "baselines" / args.servicer / args.remit_date / "input_snapshots")
+
     out_dir = Path(args.out).resolve()
     queries_dir = out_dir / "_export_queries"
     if not queries_dir.exists():
@@ -826,10 +1050,10 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     p_plan = sub.add_parser("plan", help="static-extract SQL from legacy code (no Redshift)")
-    p_plan.add_argument("servicer", choices=["mrc"])
-    p_plan.add_argument("remit_date")
-    p_plan.add_argument("--legacy-root", required=True)
-    p_plan.add_argument("--out", required=True)
+    p_plan.add_argument("--servicer", choices=["mrc"], default="mrc")
+    p_plan.add_argument("--remit-date", default="2026-04-30", dest="remit_date")
+    p_plan.add_argument("--legacy-root", default=None, dest="legacy_root")
+    p_plan.add_argument("--out", default=None)
     p_plan.add_argument(
         "--min-expected",
         type=int,
@@ -837,13 +1061,30 @@ def main(argv: list[str] | None = None) -> int:
         dest="min_expected",
         help="Fail if fewer than N SQL strings are found (default: 5)",
     )
+    p_plan.add_argument(
+        "--resolve",
+        action="store_true",
+        default=True,
+        help="Resolve placeholders to anchor values (default: on)",
+    )
+    p_plan.add_argument(
+        "--no-resolve",
+        action="store_false",
+        dest="resolve",
+        help="Skip placeholder resolution",
+    )
+    p_plan.add_argument(
+        "--bindings",
+        default=None,
+        help="Path to a _bindings.json file (default: built-in MRC 2026-04-30 bindings)",
+    )
     p_plan.set_defaults(func=cmd_plan)
 
     p_exp = sub.add_parser("export", help="execute the plan against Redshift (operator step)")
-    p_exp.add_argument("servicer", choices=["mrc"])
-    p_exp.add_argument("remit_date")
-    p_exp.add_argument("--legacy-root", required=True)
-    p_exp.add_argument("--out", required=True)
+    p_exp.add_argument("--servicer", choices=["mrc"], default="mrc")
+    p_exp.add_argument("--remit-date", default="2026-04-30", dest="remit_date")
+    p_exp.add_argument("--legacy-root", default=None, dest="legacy_root")
+    p_exp.add_argument("--out", default=None)
     p_exp.add_argument("--redshift-conn", default=os.environ.get("REDSHIFT_URL"))
     p_exp.add_argument("--also-csv", action="store_true")
     p_exp.set_defaults(func=cmd_export)

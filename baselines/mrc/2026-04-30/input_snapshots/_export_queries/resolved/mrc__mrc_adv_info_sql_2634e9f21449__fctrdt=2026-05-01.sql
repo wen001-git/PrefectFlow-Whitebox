@@ -1,12 +1,7 @@
--- auto-extracted by tools/freeze_snapshot.py plan (v2.1)
--- source: flow/remit_validation/mrc_validation.py :: _mrc_adv_info_sql (lines 106–133)
--- servicer: mrc  flag: MRC-relevant
--- remit_date: 2026-04-30
--- pattern: f-string
--- placeholders to resolve: fctrdt
--- placeholder hints:
---   fctrdt: factor-date parameter (YYYY-MM-01), e.g. '2026-05-01'
--- notes: resolve 3 placeholder(s) before export
+-- TEMPLATE: _export_queries/template/mrc__mrc_adv_info_sql_2634e9f21449.sql
+-- BINDINGS: fctrdt=2026-05-01
+-- GENERATED: 2026-05-17
+-- REVIEW BEFORE RUNNING
 
 select
             'nonrecovcorpadv' as bucket,
@@ -14,7 +9,7 @@ select
             tran_code as transaction_code,
             sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt
         from mrc.portmrcremit3rdpartyadvances
-        where fctrdt = '{fctrdt}'
+        where fctrdt = '2026-05-01'
         group by description, tran_code
         union all
         select
@@ -23,7 +18,7 @@ select
             tran_code as transaction_code,
             sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt
         from mrc.portmrcremitcorpadvances
-        where fctrdt = '{fctrdt}'
+        where fctrdt = '2026-05-01'
         group by reason, tran_code
         union all
         select
@@ -32,5 +27,5 @@ select
             disbursement_code as transaction_code,
             sum(total_activity) as amt
         from mrc.portmrcremitescrowadvances
-        where fctrdt = '{fctrdt}'
+        where fctrdt = '2026-05-01'
         group by cat, disbursement_code;

@@ -1,31 +1,28 @@
--- auto-extracted by tools/freeze_snapshot.py plan (v2.1)
--- source: flow/remit_validation/servicer_validation_with_portdaily.py :: selene_general_check (lines 511–580)
--- servicer: mrc  flag: non-MRC (other servicer)
--- remit_date: 2026-04-30
--- pattern: f-string-noexpr
--- placeholders to resolve: (none)
--- notes: non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)
+-- TEMPLATE: _export_queries/template/mrc__mrc_general_check_62a675d7e6c6.sql
+-- BINDINGS: input_curr_month_end=2026-04-30, input_fctrdt=2026-05-01, input_pre_month_end=2026-03-31
+-- GENERATED: 2026-05-17
+-- REVIEW BEFORE RUNNING
 
 with r as (
     select *
     from port.portmonth
-    where servicer = 'Selene'
-      and fctrdt = 'input_fctrdt'
+    where servicer = 'MRC'
+      and fctrdt = '2026-05-01'
 ),
 p as (
     select *
     from port.basic_data_daily_loan_common
-    where asofdate = 'input_curr_month_end'
-      and servicer = 'Selene'
+    where asofdate = '2026-04-30'
+      and servicer = 'MRC'
 ),
 p2 as (
     select *
     from port.basic_data_daily_loan_common
-    where asofdate = 'input_pre_month_end'
-      and servicer = 'Selene'
+    where asofdate = '2026-03-31'
+      and servicer = 'MRC'
 )
 select r.loanid,
-       r.svcloanid as selene_ln,
+       r.svcloanid as mrc_ln,
        coalesce(r.dealid, f.dealid) as dealid,
        r.intrate as intrate_remit,
        r.nextduedate as nextduedate_remit,
@@ -61,10 +58,7 @@ select r.loanid,
            when p.principalpaidmtd is null and p.interestpaidmtd is null then null
            else coalesce(r.pandireceived, 0) - (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0))
            end as pandi_diff_remitvsdaily,
-       case
-           when p.delq_status = 'Liquidated' then null
-           else r.pandi - p.schedule_pandi_daily
-           end as pandi_schedule_diff_remitvsdaily,
+       coalesce(mc.sched_pandi, r.pandi) - p.schedule_pandi_daily as pandi_schedule_diff_remitvsdaily,
        case when coalesce(p.schedule_pandi_daily, 0) = 0 then null else r.pandireceived / p.schedule_pandi_daily end as pandi_paid_times_remit,
        case
            when coalesce(p.schedule_pandi_daily, 0) = 0 or (p.principalpaidmtd is null and p.interestpaidmtd is null) then null
@@ -73,4 +67,8 @@ select r.loanid,
 from r
 left join p on r.loanid = p.loanid
 left join p2 on r.loanid = p2.loanid
+left join port.basic_data_monthly_loan_common mc
+    on r.fctrdt = mc.fctrdt
+   and r.loanid = mc.loanid
+   and mc.servicer = 'MRC'
 left join port.portfunding f on r.loanid = f.loanid;

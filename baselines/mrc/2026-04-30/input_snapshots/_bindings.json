@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "MRC 2026-04-30 anchor bindings for freeze_snapshot.py --resolve.",
+    "Schema: bindings = flat key→value map for {expr} and input_* placeholder resolution.",
+    "fanout = owner_name → list of binding-override dicts; each override produces one resolved file.",
+    "Dates: remit_date=2026-04-30, fctrdt=2026-05-01 (1st of remit month), fctrdt_1m=2026-04-01 (prior month 1st), pre_month_end=2026-03-31."
+  ],
+  "anchor": "2026-04-30",
+  "servicer": "MRC",
+  "generated": "2026-05-17",
+  "bindings": {
+    "mrc_db.fctrdt": "2026-05-01",
+    "mrc_db.fctrdt_1m": "2026-04-01",
+    "fctrdt": "2026-05-01",
+    "service": "MRC",
+    "servicer": "MRC",
+    "remit_date": "2026-04-30",
+    "input_fctrdt": "2026-05-01",
+    "input_curr_month_end": "2026-04-30",
+    "input_pre_month_end": "2026-03-31"
+  },
+  "fanout": {
+    "_mrc_adv_info_sql": [
+      {"fctrdt": "2026-05-01"},
+      {"fctrdt": "2026-04-01"}
+    ]
+  }
+}

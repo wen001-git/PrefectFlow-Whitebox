@@ -1,12 +1,7 @@
--- auto-extracted by tools/freeze_snapshot.py plan (v2.1)
--- source: flow/remit_validation/carrington_db.py :: get_port_month_data (lines 35–47)
--- servicer: mrc  flag: MRC-relevant
--- remit_date: 2026-04-30
--- pattern: f-string
--- placeholders to resolve: service
--- placeholder hints:
---   service: servicer name string, e.g. 'MRC'
--- notes: resolve 1 placeholder(s) before export
+-- TEMPLATE: _export_queries/template/mrc__get_port_month_data_70179c43abdd.sql
+-- BINDINGS: service=MRC
+-- GENERATED: 2026-05-17
+-- REVIEW BEFORE RUNNING
 
 select
                             case
@@ -18,4 +13,4 @@ select
                             left join
                         (select loanid from port.portmonth where servicer = 'SLS' and fctrdt = '2024-07-01') b
                         on a.loanid = b.loanid
-                        where a.servicer = '{service}';
+                        where a.servicer = 'MRC';

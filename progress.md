@@ -33,7 +33,7 @@ allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 |---|---|---|
 | **A1** — exhaustive MRC SQL coverage scan | ✅ **done** 2026-05-17 | `tools/freeze_snapshot.py` v2.0; `_export_queries/template/` (21 SQL files); `_export_queries/_coverage.md`; `_plan_index.json` updated |
 | **A2** — deep-dive on dynamic SQL / missing patterns | ⏳ pending | tbd (no missing templates found by A1 scanner — confirm before starting) |
-| **A3** — operator export (Redshift VPN required) | ⏸ blocked on A1+A2 sign-off | Parquet files under `baselines/mrc/2026-04-30/input_snapshots/parquet/` |
+| **A3** — placeholder resolver `--resolve` flag | ✅ **done** 2026-05-17 | `tools/freeze_snapshot.py` v2.1; `_export_queries/resolved/` (≥9 SQL files); `_bindings.json`; `tests/tools/test_freeze_resolve.py` |
 
 **Open in parallel right now (design tier, 6 todos `pending`)**: `stage2-mrc-feature-list`, `stage2-mrc-srs`, `stage2-mrc-data-model`, `stage2-mrc-ui-design`, `stage2-mrc-dev-plan`, `stage2-mrc-extensibility-spec`.
 **Blocked on G2 + G3 + extensibility-spec (impl tier, 7 todos)**: `stage2-mrc-ingestion`, `stage2-mrc-engine`, `stage2-mrc-xlsx-renderer`, `stage2-mrc-cell-identity-harness`, `stage2-mrc-api`, `stage2-mrc-ui-impl`, `stage2-mrc-acceptance`.

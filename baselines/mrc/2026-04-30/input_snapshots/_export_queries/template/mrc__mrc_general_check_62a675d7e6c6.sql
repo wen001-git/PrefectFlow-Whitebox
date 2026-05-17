@@ -1,4 +1,4 @@
--- auto-extracted by tools/freeze_snapshot.py plan (v2.0)
+-- auto-extracted by tools/freeze_snapshot.py plan (v2.1)
 -- source: flow/remit_validation/servicer_validation_with_portdaily.py :: mrc_general_check (lines 635–705)
 -- servicer: mrc  flag: MRC-relevant
 -- remit_date: 2026-04-30
