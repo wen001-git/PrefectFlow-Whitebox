@@ -119,3 +119,8 @@ Every stage todo (Stage 1 chapter or Stage 2 deliverable) must run the test matr
 ## 2026-05-17 — G2a A4 — manifest verifier landed
 
 - **2026-05-17 — G2a A4: reeze_snapshot.py verify subcommand added (v2.2)** — Adds 8-check validator (C1 coverage parity, C2 schema completeness, C3 file+checksum, C4 SQL hash binding, C5 column schema sanity, C6 fan-out consistency, C7 bindings doc [strict], C8 storage policy [strict]). Exits 0/1/2 for pass/core-fail/strict-fail. --json writes _verify_report.json; --verbose prints per-entry detail. Pre-export smoke run fails gracefully with operator-readable list of what's missing. 16 tests under 	ests/tools/test_freeze_verify.py.
+
+
+## 2026-05-17 — G2a A5 — operator runbook landed
+
+- **2026-05-17 — G2a A5: bilingual operator runbook + .env.example shipped** — Rationale: all G2a Track A agent-doable tooling (A1–A4, A6) is complete; the only remaining work to close G2a is the operator export run. The runbook (	ools/docs/g2a-operator-runbook.{en,zh}.md) gives any operator a single document to execute the full freeze workflow end-to-end: pre-flight checklist (VPN, Vault, Python env), Step 1 plan --resolve, Step 2 SQL review, Step 3 export snippet (copy-pasteable Python, outside the repo), Step 4 _manifest.json schema + worked example, Step 5 erify with exit-code table, Step 6 commit + hand-off instructions, credentials do-not-commit checklist, and troubleshooting for all 5 known failure modes (C1/C2/C3/C6 verify failures + Vault expiry + unresolved placeholders). .env.example added to project root (.env already gitignored). G2a Track A is now tooling-complete; operator export is the sole remaining step.

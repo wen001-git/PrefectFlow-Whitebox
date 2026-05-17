@@ -23,7 +23,7 @@ allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 
 **Active gates**
 - ✅ G1 closed — `stage1-mrc-review` done (provisional sign-off, see `decisions.md` 2026-05-17 entry)
-- ⏸ **G2a** open — `mrc-snapshot` (export Redshift inputs to local Parquet/CSV under `baselines/mrc/2026-04-30/input_snapshots/`; needs user with Redshift access). **Redefined 2026-05-17**: G2 no longer means "freeze Redshift"; it means freeze the **input dataset**. See `decisions.md` 2026-05-17 entry + session `plan.md` § 4.2.
+- ⏸ **G2a** open — `mrc-snapshot` (export Redshift inputs to local Parquet/CSV under `baselines/mrc/2026-04-30/input_snapshots/`; needs user with Redshift access). **Redefined 2026-05-17**: G2 no longer means "freeze Redshift"; it means freeze the **input dataset**. See `decisions.md` 2026-05-17 entry + session `plan.md` § 4.2. **✅ tooling complete; awaiting operator export** — see `tools/docs/g2a-operator-runbook.{en,zh}.md`.
 - ⏸ **G2b** open — `mrc-source-baseline` + `mrc-gold` (run unmodified legacy MRC code against frozen snapshot via Parquet shim; produce baseline XLSX + manifest; cross-check vs LearningLog gold XLSX). Agent-driven once G2a lands.
 - ⏸ G3 open — `stage1-mrc-baseline-verify` (V1–V12 against physical XLSX from G2b)
 
@@ -35,7 +35,7 @@ allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 | **A2** — deep-dive on dynamic SQL / missing patterns | ⏳ pending | tbd (no missing templates found by A1 scanner — confirm before starting) |
 | **A3** — placeholder resolver `--resolve` flag | ✅ **done** 2026-05-17 | `tools/freeze_snapshot.py` v2.1; `_export_queries/resolved/` (≥9 SQL files); `_bindings.json`; `tests/tools/test_freeze_resolve.py` |
 | **A4** — operator export (Redshift VPN required) | ✅ **done** 2026-05-17 (verify subcommand) | `tools/freeze_snapshot.py verify`; 8 checks C1–C6 core + C7/C8 strict; `tests/tools/test_freeze_verify.py` (16 tests) |
-| **A5** — manifest + export orchestration | ⏳ pending | `freeze_snapshot.py export` full implementation |
+| **A5** — operator runbook (bilingual) | ✅ **done** 2026-05-17 | `tools/docs/g2a-operator-runbook.{en,zh}.md`; `.env.example`; end-to-end export instructions + copy-pasteable snippet |
 | **A6** — Redshift dependency catalog | ✅ **done** 2026-05-17 | `docs/mrc/_g2a-redshift-dependencies.{zh,en}.md`; cross-refs in `1.1-rawdata.{zh,en}.md`; `decisions.md` entry |
 
 **Open in parallel right now (design tier, 6 todos `pending`)**: `stage2-mrc-feature-list`, `stage2-mrc-srs`, `stage2-mrc-data-model`, `stage2-mrc-ui-design`, `stage2-mrc-dev-plan`, `stage2-mrc-extensibility-spec`.
