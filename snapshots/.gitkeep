@@ -1,0 +1,8 @@
+# Frozen reference snapshots live here.
+#
+# Structure:
+#   snapshots/<YYYY-MM-DD>/raw/<servicer>/*.parquet   -- frozen Redshift inputs
+#   snapshots/<YYYY-MM-DD>/gold/<servicer>/*.json     -- normalized gold outputs
+#   snapshots/<YYYY-MM-DD>/README.md                  -- auto-generated catalog
+#
+# Actual data files are gitignored (large); only this README and .gitkeep are tracked.

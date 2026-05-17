@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sheet.schema.json",
+  "title": "Sheet column-level metadata",
+  "type": "object",
+  "required": ["sheet", "business_meaning_en", "business_meaning_zh", "producing_validators", "columns"],
+  "additionalProperties": false,
+  "properties": {
+    "sheet": {"type": "string", "minLength": 1},
+    "business_meaning_en": {"type": "string", "minLength": 1},
+    "business_meaning_zh": {"type": "string", "minLength": 1},
+    "producing_validators": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9_]+/[a-z0-9_]+$"}, "minItems": 1},
+    "columns": {
+      "type": "object",
+      "minProperties": 1,
+      "patternProperties": {
+        "^.+$": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "rule_en", "rule_zh"],
+          "properties": {
+            "type": {"type": "string", "enum": ["string", "integer", "float", "decimal", "date", "datetime", "boolean", "json"]},
+            "format": {"type": "string"},
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["table", "column"],
+                "additionalProperties": false,
+                "properties": {
+                  "table": {"type": "string"},
+                  "column": {"type": "string"},
+                  "transform": {"type": ["string", "null"]}
+                }
+              }
+            },
+            "expression": {"type": ["string", "null"]},
+            "rule_en": {"type": "string", "minLength": 1},
+            "rule_zh": {"type": "string", "minLength": 1},
+            "business_impact_en": {"type": "string"},
+            "business_impact_zh": {"type": "string"},
+            "sample_values": {"type": "array"},
+            "related_validator": {"type": "string", "pattern": "^[a-z0-9_]+/[a-z0-9_]+$"}
+          }
+        }
+      }
+    }
+  }
+}

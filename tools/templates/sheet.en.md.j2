@@ -1,0 +1,66 @@
+# Sheet — {{ s.sheet }}
+
+{{ s.business_meaning_en }}
+
+**Producing validators**: {% for vid in s.producing_validators %}[`{{ vid }}`](../validators/{{ vid }}.md){% if not loop.last %}, {% endif %}{% endfor %}
+
+## Columns
+
+Click any column to expand its full logic card.
+
+| # | Column | Type | Sources | Rule (short) |
+|---|---|---|---|---|
+{% for cname, col in columns.items() %}
+| {{ loop.index }} | [`{{ cname }}`](#col-{{ loop.index }}) | `{{ col.type }}` | {% if col.sources %}{% for src in col.sources %}`{{ src.table }}.{{ src.column }}`{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %} | {{ col.rule_en[:60] }}{% if col.rule_en|length > 60 %}…{% endif %} |
+{% endfor %}
+
+## Column logic cards
+
+{% for cname, col in columns.items() %}
+
+### <a name="col-{{ loop.index }}"></a>`{{ cname }}`
+
+| Attribute | Value |
+|---|---|
+| **Type** | `{{ col.type }}` |
+{% if col.format %}| **Format** | `{{ col.format }}` |
+{% endif %}
+{% if col.related_validator %}| **Related validator** | [`{{ col.related_validator }}`](../validators/{{ col.related_validator }}.md) |
+{% endif %}
+
+**Business rule** (EN): {{ col.rule_en }}
+
+**业务规则 (ZH)**: {{ col.rule_zh }}
+
+{% if col.business_impact_en %}
+!!! info "Business impact"
+    {{ col.business_impact_en }}
+{% endif %}
+
+{% if col.sources %}
+**Sources** (column-level lineage, auto-extracted via sqlglot):
+
+| Upstream table | Upstream column | Transform |
+|---|---|---|
+{% for src in col.sources %}
+| `{{ src.table or '(unknown)' }}` | `{{ src.column }}` | {% if src.transform %}`{{ src.transform }}`{% else %}—{% endif %} |
+{% endfor %}
+{% else %}
+*(No source lineage extracted yet — sqlglot may have failed or this is a Python-only column.)*
+{% endif %}
+
+{% if col.expression %}
+**Expression**:
+
+```sql
+{{ col.expression }}
+```
+{% endif %}
+
+{% if col.sample_values %}
+**Sample values**: {% for sv in col.sample_values %}`{{ sv }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+
+---
+
+{% endfor %}

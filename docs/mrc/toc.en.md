@@ -1,0 +1,153 @@
+# 1.0 TOC & Scope / 章节地图与范围
+
+> **Purpose**: Entry document for the MRC chapter — fixes Stage 1 MRC scope, deliverables, source-code coordinates, and the chapter map / dependency graph for sub-chapters 1.1–1.7.
+>
+> **Audience**: Current and future-session Copilot CLI agents; project maintainers; anyone wanting to quickly answer "how deeply is MRC's Validation Report analyzed right now, and which document do I read next?".
+>
+> **Revision history**
+>
+> | Date | Author | Change |
+> |---|---|---|
+> | 2026-05-17 | Copilot CLI agent | v1 — first version. First formal chapter under the v9.1 MRC-only pivot. Contains **one correction to an earlier assumption**: MRC actually has 5 validators (including `mrc_other_check`), not the "4, no mrc_other_check" claim recorded in earlier plan v9.1 drafts. See § 5 and § 10. |
+
+# 1. MRC chapter: TOC and scope freeze
+
+## 1. Document role
+
+This is the table-of-contents + "contract page" for the MRC chapter (`docs/mrc/`). It **does not** contain detailed dataflow analysis, field lineage, or validation-rule catalogs — those live in sub-chapters 1.1–1.6. This document answers only four questions:
+
+1. **Scope**: what is in / out of Stage 1 MRC analysis?
+2. **Coordinates**: where do the real code, SQL, config, and gold files live?
+3. **Baseline**: which single `remit_date` do all examples and the baseline XLSX use?
+4. **Map**: what does each of sub-chapters 1.1–1.7 produce, and how do they depend on each other?
+
+## 2. Scope
+
+### 2.1 In scope
+
+- Describe each of MRC's **5 Prefect validators**: inputs, SQL / Python logic, output DataFrame columns.
+- Describe how those 5 DataFrames are rendered by `gen_remit_validation_report.py` into **5 XLSX sheets**.
+- Describe the **calculation lineage** of every output column (back to upstream fields, SQL expressions, or constants).
+- Describe each sheet's **pass / fail / exception decision rules** (highlight columns, thresholds, dual branches, …).
+- Capture and freeze a **baseline XLSX** at one real `remit_date = 2026-04-30`, serving as ground truth for Stage 2 cell-identical acceptance.
+
+### 2.2 Out of scope
+
+- Any Stage 2 rebuild work (new data model, new engine, UI, …) — owned by `stage2-mrc-*` todos and gated on `stage1-mrc-review` user approval.
+- End-to-end analysis of the other servicers (Carrington / Shellpoint / Arvest / CC5 / Selene / SLS / Scattered / cross-servicer dataflow) — all currently `pending-deferred` (see [`docs/_status/servicers-registry.en.md`](../_status/servicers-registry.en.md)).
+- MRC ingestion (how vendor files become `mrc.portmrcremit*` tables) — sub-1.1 Raw Data Layer (rawdata.en.md) only lists the table names + a one-line origin note; the ingestion job itself is not analyzed.
+
+## 3. Stage 1 baseline `remit_date`
+
+> **Baseline `remit_date` = `2026-04-30`** (pinned by plan v9.1 § "Stage 1 baseline remit_date")
+
+All downstream sub-chapters (1.1–1.6) use this date **by default** for sample rows, expected row counts, gold outputs, and baseline XLSX captures.
+
+Derived time anchors:
+
+| Anchor | Derivation | Value at 2026-04-30 |
+|---|---|---|
+| `remit_date` | input parameter | `2026-04-30` |
+| `pre_date` | `remit_date - MonthEnd(1)` | `2026-03-31` |
+| `fctrdt` | `get_fctrdt(remit_date)` | determined by `flow/remit_validation/utils.py` (confirmed in 1.1) |
+| `fctrdt_1m` | `get_fctrdt(pre_date)` | as above |
+| `curr_month_end` | `remit_date` itself | `2026-04-30` |
+| `pre_month_end` | `pre_date` | `2026-03-31` |
+
+Source: `mrc_db.py:1-14`.
+
+## 4. The 5 MRC sheets
+
+In the order they appear in the Validation Report XLSX:
+
+| # | Sheet name | One-liner | Producing validator | Highlight (P0) columns |
+|---|---|---|---|---|
+| 1 | `MRC_Summary_check` | Single-row aggregate of remit-month financials for all MRC loans | `mrc_summary_check` | (no explicit highlights) |
+| 2 | `MRC_General_Check` | Per-loan "general info" remit vs daily comparison (rate, next due, principal balance, …) | `mrc_check_general_info` | 7 cols: `intrate_diff_remitvsdaily` / `nextduedate_diff_remitvsdaily` / `begbal_diff_remitvsdaily` / `endbal_diff_remitvsdaily` / `deferredprincipal_diff_remitvsdaily` / `deferredint_diff_remitvsdaily` / `pandi_schedule_diff_remitvsdaily` |
+| 3 | `MRC_Advance_Check` | Per-loan advance / recovery / escrow balance change, remit vs daily | `mrc_check_adv_balance` | 4 cols: `escadv_diff_remitvsdaily` / `recovcorpadv_diff_remitvsdaily` / `nonrecovcorpadv_diff_remitvsdaily` / `totalcorpadv_diff_remitvsdaily` |
+| 4 | `MRC_ServiceFee_Check` | Per-loan service fee: `portmrcremitloanlevelrecap` vs `portmonth` diff | `mrc_service_fee_check` | 1 col: `servicefee_diff` |
+| 5 | `MRC_Adv_Info` | Current + prior month advance detail aggregated by (bucket × description × tran_code), incl. MoM ratio | `mrc_other_check` | (no explicit highlights) |
+
+XLSX rendering source: `util/gen_remit_validation_report.py:1327-1356`.
+
+## 5. The 5 MRC validators (correction: 5, not 4)
+
+> **Correction note**: the plan v9.1 draft and two 2026-05-17 checkpoints stated "MRC has only 4 validators, no `mrc_other_check`". **That was wrong.** Reading `mrc_validation.py` shows a fully-defined `@task(name='mrc_other_check')` at lines 136–158, and `remit_validation.py:143` stores its output into `VALIDATION_TABLE_MAP['mrc_adv_info']`, which renders the `MRC_Adv_Info` sheet. This chapter, the plan v9.1 servicer status matrix, and decisions.md are all to be aligned with this corrected fact.
+
+| # | Validator function | Source | Key technique | Output → sheet |
+|---|---|---|---|---|
+| 1 | `mrc_summary_check` | `mrc_validation.py:8-36` | inline SQL; 13-column `sum()` aggregate over `port.portmonth` | `MRC_Summary_check` |
+| 2 | `mrc_check_general_info` | `mrc_validation.py:57-72` | SQL template `mrc_general_check`, replacing `input_fctrdt` / `input_curr_month_end` / `input_pre_month_end` | `MRC_General_Check` |
+| 3 | `mrc_check_adv_balance` | `mrc_validation.py:39-54` | SQL template `mrc_adv_validation`, same three-parameter replacement | `MRC_Advance_Check` |
+| 4 | `mrc_service_fee_check` | `mrc_validation.py:75-102` | inline SQL, 3-table join: `mrc.portmrcremitloanlevelrecap r` + `port.portmonth p` + `port.portfunding f` | `MRC_ServiceFee_Check` |
+| 5 | `mrc_other_check` | `mrc_validation.py:105-158` | Python: runs `_mrc_adv_info_sql` twice (curr fctrdt and fctrdt_1m), pandas merge to compute `amt_MoM = amt / amt_1m - 1` | `MRC_Adv_Info` |
+
+All validators take the same `MrcDB` instance as input (`mrc_db.py:7-14`) and append `asofdate = remit_date` to the returned DataFrame.
+
+## 6. The 2 SQL templates
+
+| Template name | File | Used by | Three parameters |
+|---|---|---|---|
+| `mrc_adv_validation` | `flow/remit_validation/servicer_validation_with_portdaily.py` | `mrc_check_adv_balance` | `input_fctrdt`, `input_pre_month_end`, `input_curr_month_end` |
+| `mrc_general_check` | `flow/remit_validation/servicer_validation_with_portdaily.py` | `mrc_check_general_info` | `input_fctrdt`, `input_curr_month_end`, `input_pre_month_end` |
+
+The full SQL bodies of these templates (tables, joins, CTEs, diff-column definitions) are unpacked in 1.2 dataflow and 1.3 sheets. This chapter only fixes their names.
+
+## 7. Orchestration entry point
+
+MRC is wired into the flow at `flow/remit_validation/remit_validation.py:134-144`:
+
+1. `mrc_db = MrcDB(remit_date, to_new_redshift, to_mysql)` — build the DB handle.
+2. `mrc_summary_df = mrc_summary_check(mrc_db)` → `VALIDATION_TABLE_MAP['mrc_summary_check']`
+3. `mrc_general_df = mrc_check_general_info(mrc_db)` → `VALIDATION_TABLE_MAP['mrc_general_check']`
+4. `mrc_adv_df = mrc_check_adv_balance(mrc_db)` → `VALIDATION_TABLE_MAP['mrc_adv_check']`
+5. `mrc_service_fee_df = mrc_service_fee_check(mrc_db)` → `VALIDATION_TABLE_MAP['mrc_service_fee_check']`
+6. `mrc_adv_info_df = mrc_other_check(mrc_db)` → `VALIDATION_TABLE_MAP['mrc_adv_info']`
+
+The 5 MRC keys in `VALIDATION_TABLE_MAP` are subsequently consumed by `gen_remit_validation_report.py` and rendered to 5 sheets. The other keys in `VALIDATION_TABLE_MAP` belong to other servicers and are out of scope here.
+
+> 🔍 PENDING-ANALYSIS: the upstream / downstream orchestration chain (`compose_report_task` / `scattered_validation` / email send / S3 write) is cross-servicer concern, tracked in [`docs/dataflow/_pending.en.md`](../dataflow/_pending.en.md) and not unpacked here.
+
+## 8. Source citation index
+
+All sub-chapters 1.1–1.6 will cite source code from the following files. Centralizing the list here makes one-shot maintenance verification possible:
+
+| File | Line range | Note |
+|---|---|---|
+| `flow/remit_validation/mrc_db.py` | `mrc_db.py:1-14` | MRC DB handle; time-anchor derivation |
+| `flow/remit_validation/mrc_validation.py` | `mrc_validation.py:1-158` | 5 `@task` validators |
+| `flow/remit_validation/servicer_validation_with_portdaily.py` | `mrc_adv_validation` + `mrc_general_check` template blocks | SQL templates (line numbers given in 1.2) |
+| `flow/remit_validation/remit_validation.py` | `remit_validation.py:134-144` | MRC orchestration block (5 validators called in order) |
+| `util/gen_remit_validation_report.py` | `gen_remit_validation_report.py:1327-1356` | XLSX rendering contract for the 5 MRC sheets (column lists + highlight columns) |
+
+## 9. Chapter map (1.1 – 1.7)
+
+Subsequent chapters are organized in dataflow order. Each delivers two heading-aligned bilingual files `docs/mrc/<name>.{zh,en}.md` plus a `test_reports/<todo-id>_YYYY-MM-DD.md` upon completion.
+
+| Number | todo-id | Chapter | Output | Status |
+|---|---|---|---|---|
+| 1.0 | `stage1-mrc-toc` | This document | `docs/mrc/toc.{zh,en}.md` | 🚧 in progress |
+| 1.1 | `stage1-mrc-rawdata` | Raw data and unified tables | `docs/mrc/rawdata.{zh,en}.md` | ⏳ pending |
+| 1.2 | `stage1-mrc-dataflow` | End-to-end dataflow (mermaid + legend) | `docs/mrc/dataflow.{zh,en}.md` | ⏳ pending |
+| 1.3 | `stage1-mrc-sheets` | Per-sheet generation logic for all 5 sheets | `docs/mrc/sheets.{zh,en}.md` | ⏳ pending |
+| 1.4 | `stage1-mrc-fields` | Field-level lineage of every output column | `docs/mrc/fields.{zh,en}.md` | ⏳ pending |
+| 1.5 | `stage1-mrc-rules` | Validation rule catalog (pass / fail / exception) | `docs/mrc/rules.{zh,en}.md` | ⏳ pending |
+| 1.6 | `stage1-mrc-baseline` | Baseline XLSX capture and freeze | `docs/mrc/baseline.{zh,en}.md` + `baselines/mrc/2026-04-30/validation_report.xlsx` | ⏳ pending |
+| 1.7 | `stage1-mrc-review` | User walk-through review (gate for Stage 2) | (user action) | ⏳ pending |
+
+Dependency: 1.1 → 1.2 → 1.3 → 1.4 → 1.5 → 1.6 → 1.7.
+
+## 10. Known unknowns / open assumptions
+
+- **The `mrc_other_check` correction** is stated in § 5. It must be propagated back into the `plan.md` servicer status matrix (drop the "no mrc_other_check" note from the MRC row) and into the `notes` field of the MRC row in `docs/_status/servicers-registry.{zh,en}.md`.
+- The actual logic of `get_fctrdt(remit_date)` (`flow/remit_validation/utils.py`) has not been read in detail yet — sub-1.1 Raw Data Layer (rawdata.en.md) raw data will formally record its derivation rule and the concrete value at 2026-04-30 for the first time.
+- The full source text and join topology of the 2 SQL templates are unpacked in 1.2 dataflow; this chapter only names them.
+- Baseline capture uses `snapshots/2026-04-30/gold/MRC_*.json` (frozen at v8, un-frozen at v9.1) as the comparison truth. If the JSON disagrees with a freshly-run XLSX on some columns, sub-1.6 Baseline XLSX Behavior (baseline.en.md) baseline will first explain the discrepancy, then decide which of the two becomes the cell-identical acceptance baseline.
+
+## 11. Cross-servicer references (placeholder rule)
+
+For anything related to other servicers (shared SQL templates, shared auxiliary tables, cross-servicer rules like `scattered_*`, …), this chapter follows the plan v9.1 / AGENTS.md § 6.8 placeholder rule:
+
+- Use a `> 🔍 PENDING-ANALYSIS:` callout at the site of reference;
+- Link to [`docs/_status/servicers-registry.en.md`](../_status/servicers-registry.en.md) and the relevant `docs/<servicer>/_pending.en.md`;
+- Do not pretend analysis of that servicer is complete.

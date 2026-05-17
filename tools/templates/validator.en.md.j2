@@ -1,0 +1,39 @@
+# {{ v.title_en }}
+
+**ID**: `{{ v.id }}` &nbsp;&nbsp; **Servicer**: `{{ v.servicer }}` &nbsp;&nbsp; **Source**: `{{ v.source_citation }}`
+
+{% if v.description_en %}{{ v.description_en }}{% endif %}
+
+## Business rule
+
+{{ v.rule_en }}
+{% if v.rule_business_impact_en %}
+!!! info "Business impact"
+    {{ v.rule_business_impact_en }}
+{% endif %}
+
+## Produces sheets
+
+{% for s in sheets %}
+- [{{ s.name }}](../../sheets/{{ s.name }}.md) — {{ s.data.business_meaning_en }}
+{% endfor %}
+
+## Source tables
+
+{% for t in v.source_tables %}
+- `{{ t }}`
+{% endfor %}
+
+{% if sql %}
+## SQL
+
+```sql
+{{ sql }}
+```
+{% else %}
+*(Pure-Python validator; no extracted SQL file.)*
+{% endif %}
+
+{% if v.tags %}
+**Tags**: {% for t in v.tags %}`{{ t }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

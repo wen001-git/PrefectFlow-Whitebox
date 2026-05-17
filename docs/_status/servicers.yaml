@@ -1,0 +1,87 @@
+# Servicer status manifest — machine-readable mirror of
+# docs/_status/servicers-registry.{zh,en}.md.
+#
+# Source of truth: this file (loaded by tools/registry.py). The .md
+# registry and plan.md must be updated in the same commit when this
+# changes (AGENTS.md § 6.8).
+servicers:
+  - id: mrc
+    display_name: MRC
+    status: in-progress
+    sheets_count: 5
+    stage1_doc: in-progress
+    stage2_system: pending
+    placeholder_doc: null
+    notes: "v9.1 active focus. 5 validators (corrected 2026-05-17: includes mrc_other_check). 2 SQL templates."
+
+  - id: carrington
+    display_name: Carrington
+    status: done
+    sheets_count: 6
+    stage1_doc: done
+    stage2_system: blocked
+    placeholder_doc: null
+    notes: "Stage 1 chapter archived at docs/_archived/pre-mrc-pivot/carrington.{zh,en}.md."
+
+  - id: shellpoint
+    display_name: Shellpoint
+    status: done
+    sheets_count: 5
+    stage1_doc: done
+    stage2_system: blocked
+    placeholder_doc: null
+    notes: "Stage 1 chapter archived at docs/_archived/pre-mrc-pivot/shellpoint.{zh,en}.md."
+
+  - id: arvest
+    display_name: Arvest
+    status: pending-analysis
+    sheets_count: 4
+    stage1_doc: pending
+    stage2_system: blocked
+    placeholder_doc: docs/arvest/_pending.en.md
+    notes: "sheet count assumed; SQL templates unverified."
+
+  - id: cc5
+    display_name: CC5
+    status: pending-analysis
+    sheets_count: 2
+    stage1_doc: pending
+    stage2_system: blocked
+    placeholder_doc: docs/cc5/_pending.en.md
+    notes: "smallest servicer; candidate next analysis target after MRC."
+
+  - id: selene
+    display_name: Selene
+    status: pending-analysis
+    sheets_count: 5
+    stage1_doc: pending
+    stage2_system: blocked
+    placeholder_doc: docs/selene/_pending.en.md
+    notes: "sheet count assumed; verify against selene_validation.py."
+
+  - id: sls
+    display_name: SLS
+    status: pending-analysis
+    sheets_count: 5
+    stage1_doc: pending
+    stage2_system: blocked
+    placeholder_doc: docs/sls/_pending.en.md
+    notes: "known 2026-04 empty-data bug to document when analyzed."
+
+  - id: scattered
+    display_name: Scattered (cross-servicer validators)
+    status: pending-analysis
+    sheets_count: 0
+    stage1_doc: pending
+    stage2_system: blocked
+    placeholder_doc: docs/scattered/_pending.en.md
+    notes: "~8 validators; inventory not yet enumerated."
+
+  - id: dataflow
+    display_name: Cross-servicer dataflow / lineage
+    status: pending-analysis
+    sheets_count: 0
+    stage1_doc: pending
+    stage2_system: blocked
+    placeholder_doc: docs/dataflow/_pending.en.md
+    notes: "requires per-servicer docs to complete first."

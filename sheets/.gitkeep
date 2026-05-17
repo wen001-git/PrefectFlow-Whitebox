@@ -1,0 +1,19 @@
+# Per-sheet column-level metadata YAML files live here.
+#
+# Format: sheets/<sheet_name>.yaml
+# Schema:
+#   sheet: <sheet_name>
+#   business_meaning_en: ...
+#   business_meaning_zh: ...
+#   producing_validators: [<validator_id>, ...]
+#   columns:
+#     <col_name>:
+#       type: ...
+#       format: ...
+#       sources:                 # auto-filled by tools/build_lineage.py (sqlglot)
+#         - {table: ..., col: ..., transform: ...}
+#       expression: ...          # SQL expression / Python op
+#       rule_en: ...
+#       rule_zh: ...
+#       sample_values: [...]
+#       related_validator: <validator_id>

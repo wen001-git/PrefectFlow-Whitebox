@@ -1,0 +1,70 @@
+sheet: MRC_Adv_Info
+business_meaning_en: |
+  Bucketed advance amounts at the description + transaction_code level for three advance
+  categories (non-recoverable corp, recoverable corp, escrow), with prior-month MoM ratio.
+business_meaning_zh: |
+  对三类 advance（不可回收 corp、可回收 corp、escrow）按 description + 交易代码维度做
+  分桶聚合，并与前一月做 MoM 比较。
+producing_validators:
+  - mrc/other_check
+columns:
+  bucket:
+    type: string
+    rule_en: "Bucket label: one of 'nonrecovcorpadv', 'recovcorpadv', 'escadv'."
+    rule_zh: "桶标签：'nonrecovcorpadv' / 'recovcorpadv' / 'escadv' 之一。"
+    sample_values: ["nonrecovcorpadv", "recovcorpadv", "escadv"]
+    related_validator: mrc/other_check
+  description:
+    type: string
+    rule_en: |
+      Bucket-specific description column:
+      • nonrecovcorpadv: portmrcremit3rdpartyadvances.description
+      • recovcorpadv:    portmrcremitcorpadvances.reason
+      • escadv:          portmrcremitescrowadvances.cat
+    rule_zh: |
+      按桶取不同字段：
+      • nonrecovcorpadv：portmrcremit3rdpartyadvances.description
+      • recovcorpadv：portmrcremitcorpadvances.reason
+      • escadv：portmrcremitescrowadvances.cat
+    related_validator: mrc/other_check
+  transaction_code:
+    type: string
+    rule_en: |
+      Bucket-specific transaction-code column:
+      • nonrecovcorpadv / recovcorpadv: tran_code
+      • escadv:                         disbursement_code
+    rule_zh: |
+      按桶取不同字段：
+      • nonrecovcorpadv / recovcorpadv：tran_code
+      • escadv：disbursement_code
+    related_validator: mrc/other_check
+  amt:
+    type: decimal
+    format: currency
+    rule_en: |
+      Current-month bucketed sum:
+      • corp buckets: sum(coalesce(advances,0) + coalesce(recoveries,0))
+      • escadv:       sum(total_activity)
+    rule_zh: |
+      当期桶求和：
+      • corp 桶：sum(coalesce(advances,0) + coalesce(recoveries,0))
+      • escadv：sum(total_activity)
+    related_validator: mrc/other_check
+  amt_1m:
+    type: decimal
+    format: currency
+    rule_en: "Prior-month bucketed sum (same formula, prior fctrdt). Null if not joined."
+    rule_zh: "前一月桶求和（同公式、前一期 fctrdt）。未匹配则为空。"
+    related_validator: mrc/other_check
+  amt_MoM:
+    type: float
+    rule_en: "amt / amt_1m − 1 (month-over-month ratio change)."
+    rule_zh: "amt / amt_1m − 1（环比变化率）。"
+    business_impact_en: "Large absolute MoM swings prompt ops to investigate."
+    business_impact_zh: "MoM 绝对值过大触发运维排查。"
+    related_validator: mrc/other_check
+  asofdate:
+    type: date
+    rule_en: "Remit date (set in Python after current-month SQL)."
+    rule_zh: "Remit 日期（当期 SQL 后在 Python 中赋值）。"
+    related_validator: mrc/other_check

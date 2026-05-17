@@ -1,0 +1,39 @@
+id: mrc/check_adv_balance
+servicer: mrc
+name: check_adv_balance
+title_en: "MRC Advance Balance Check (remit vs daily)"
+title_zh: "MRC Advance 余额核对（remit vs daily）"
+description_en: |
+  Loan-level advance-balance reconciliation: for each MRC loan, compare escrow advance,
+  recoverable corp advance, and non-recoverable corp advance balances between remit
+  (portmonth changes) and our daily snapshot (prev vs curr month-end deltas).
+description_zh: |
+  贷款级 advance 余额对账：对每笔 MRC 贷款，把 escrow advance、可回收 corp advance、
+  不可回收 corp advance 的余额变动在 remit（portmonth 的 _chg 字段）与 daily 快照
+  （上月末 → 当月末差额）之间比对。
+related_sheets:
+  - MRC_Advance_Check
+source_tables:
+  - port.portmonth
+  - port.basic_data_daily_loan_common
+  - port.portfunding
+source_citation: "flow/remit_validation/servicer_validation_with_portdaily.py:583"
+rule_en: |
+  Join portmonth (remit) with previous- and current-month basic_data_daily_loan_common
+  snapshots for MRC. For each loan, compute the daily-snapshot change (curr - prev) for
+  escrow / recoverable corp / non-recoverable corp advance balances and compare against
+  the servicer-reported _chg fields. The "_diff_remitvsdaily" output should reconcile to
+  near zero when both sides agree.
+rule_zh: |
+  把 MRC 的 portmonth（remit）与 basic_data_daily_loan_common 的上月末 + 当月末两份
+  快照按 loanid 关联。对每笔贷款计算 daily 快照差额（curr - prev）—— escrow / 可回收
+  corp / 不可回收 corp advance 余额，与 servicer 上报的 _chg 字段比对。两边一致时
+  "_diff_remitvsdaily" 应接近 0。
+rule_business_impact_en: "Mismatched advances directly affect cash flow projections for investors."
+rule_business_impact_zh: "Advance 不一致会直接影响投资人现金流预测。"
+sql_file: null    # Filled in mrc-v3-doc
+tags:
+  - mrc
+  - advance
+  - remit_vs_daily
+  - stub

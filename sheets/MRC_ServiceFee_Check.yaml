@@ -1,0 +1,55 @@
+sheet: MRC_ServiceFee_Check
+business_meaning_en: |
+  Loan-level service-fee reconciliation: MRC's loan-level remit recap vs the consolidated
+  portmonth servicefee. Any non-zero diff flags an aggregation mismatch.
+business_meaning_zh: |
+  贷款级服务费对账：MRC 贷款级 remit 明细 vs portmonth 合并后的 servicefee。
+  差额非零即提示聚合不一致。
+producing_validators:
+  - mrc/service_fee_check
+columns:
+  fctrdt:
+    type: date
+    rule_en: "Factor date from portmrcremitloanlevelrecap."
+    rule_zh: "来自 portmrcremitloanlevelrecap 的因子日期。"
+    related_validator: mrc/service_fee_check
+  loanid:
+    type: string
+    rule_en: "Internal loan id from portmrcremitloanlevelrecap."
+    rule_zh: "portmrcremitloanlevelrecap 中的内部 loan id。"
+    related_validator: mrc/service_fee_check
+  mrc_ln:
+    type: string
+    rule_en: "MRC servicer loan number."
+    rule_zh: "MRC servicer 的贷款号。"
+    related_validator: mrc/service_fee_check
+  dealid:
+    type: string
+    rule_en: "Deal id, taken from portmonth first; falls back to portfunding."
+    rule_zh: "Deal id，优先取 portmonth；缺则回退到 portfunding。"
+    related_validator: mrc/service_fee_check
+  servicefee_remit_raw:
+    type: decimal
+    format: currency
+    rule_en: "total_accrued_earned_servicing_fees from portmrcremitloanlevelrecap (loan-level raw)."
+    rule_zh: "portmrcremitloanlevelrecap 的 total_accrued_earned_servicing_fees（贷款级原始值）。"
+    related_validator: mrc/service_fee_check
+  servicefee_portmonth:
+    type: decimal
+    format: currency
+    rule_en: "servicefee from port.portmonth (consolidated, MRC)."
+    rule_zh: "port.portmonth 的 servicefee（合并后，MRC）。"
+    related_validator: mrc/service_fee_check
+  servicefee_diff:
+    type: decimal
+    format: currency
+    rule_en: "servicefee_remit_raw − servicefee_portmonth. Non-zero = aggregation mismatch."
+    rule_zh: "servicefee_remit_raw − servicefee_portmonth。非零 = 聚合不一致。"
+    business_impact_en: "Highlighted in the report when non-zero; investigated by ops."
+    business_impact_zh: "非零时报表中高亮显示，运维核查。"
+    related_validator: mrc/service_fee_check
+  asofdate:
+    type: date
+    rule_en: "Remit date (set in Python after SQL)."
+    rule_zh: "Remit 日期（SQL 后在 Python 中赋值）。"
+    related_validator: mrc/service_fee_check

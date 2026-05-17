@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "servicer-status manifest",
+  "description": "Machine-readable mirror of docs/_status/servicers-registry.{zh,en}.md.",
+  "type": "object",
+  "required": ["servicers"],
+  "additionalProperties": false,
+  "properties": {
+    "servicers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/servicer" }
+    }
+  },
+  "$defs": {
+    "servicer": {
+      "type": "object",
+      "required": [
+        "id", "display_name", "status", "sheets_count",
+        "stage1_doc", "stage2_system", "placeholder_doc"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+        "display_name": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["done", "in-progress", "pending-analysis"]
+        },
+        "sheets_count": { "type": "integer", "minimum": 0 },
+        "stage1_doc": {
+          "type": "string",
+          "enum": ["done", "in-progress", "pending"]
+        },
+        "stage2_system": {
+          "type": "string",
+          "enum": ["done", "in-progress", "pending", "blocked"]
+        },
+        "placeholder_doc": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "minLength": 1 }
+          ]
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

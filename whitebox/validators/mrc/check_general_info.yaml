@@ -1,0 +1,40 @@
+id: mrc/check_general_info
+servicer: mrc
+name: check_general_info
+title_en: "MRC General Info Check (remit vs daily)"
+title_zh: "MRC 一般信息核对（remit vs daily）"
+description_en: |
+  Loan-level reconciliation: compare key loan attributes (interest rate, next due date,
+  begin/end balance, deferred principal/interest, P&I) between the servicer's remit
+  report (port.portmonth) and our internal daily snapshot (basic_data_daily_loan_common).
+description_zh: |
+  贷款级对账：把关键贷款属性（利率、下次到期日、期初/期末余额、deferred principal/interest、P&I）
+  在 servicer 上报的 remit 报表（port.portmonth）与内部 daily 快照
+  （basic_data_daily_loan_common）之间逐贷比对。
+related_sheets:
+  - MRC_General_Check
+source_tables:
+  - port.portmonth
+  - port.basic_data_daily_loan_common
+  - port.basic_data_monthly_loan_common
+  - port.portfunding
+source_citation: "flow/remit_validation/servicer_validation_with_portdaily.py:635"
+rule_en: |
+  Join portmonth (remit master) with two snapshots of basic_data_daily_loan_common
+  (previous month-end & current month-end) for MRC. For each loan emit "_remit" and
+  "_daily" values plus their "_diff_remitvsdaily" deltas. Non-zero deltas in interest
+  rate / next due date / balances / deferred amounts / P&I schedule flag potential
+  servicer reporting errors.
+rule_zh: |
+  把 MRC 的 portmonth（remit 主表）与 basic_data_daily_loan_common 的两个快照
+  （上月末 & 当月末）按 loanid 关联。对每笔贷款输出 "_remit" 与 "_daily" 值，以及它们的
+  "_diff_remitvsdaily" 差异。利率 / 下次到期日 / 余额 / deferred 金额 / P&I schedule 上的
+  非零差异，提示 servicer 上报可能有误。
+rule_business_impact_en: "Mismatches feed downstream investor reporting reconciliation."
+rule_business_impact_zh: "差异会进入下游投资人报表对账流程。"
+sql_file: null    # Filled in mrc-v2-doc
+tags:
+  - mrc
+  - general
+  - remit_vs_daily
+  - stub

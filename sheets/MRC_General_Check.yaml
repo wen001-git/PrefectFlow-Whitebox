@@ -1,0 +1,210 @@
+sheet: MRC_General_Check
+business_meaning_en: |
+  Loan-level reconciliation of key loan attributes between the servicer's remit report
+  (port.portmonth) and our internal daily snapshot (basic_data_daily_loan_common).
+  "_remit" and "_daily" pairs with their "_diff_remitvsdaily" deltas flag servicer
+  reporting errors.
+business_meaning_zh: |
+  贷款级关键属性对账：servicer remit 报表（port.portmonth）vs 内部 daily 快照
+  （basic_data_daily_loan_common）。"_remit" 与 "_daily" 配对加 "_diff_remitvsdaily"
+  差异，标记 servicer 上报可能的错误。
+producing_validators:
+  - mrc/check_general_info
+columns:
+  loanid:
+    type: string
+    rule_en: "Internal loan id (join key)."
+    rule_zh: "内部 loan id（关联键）。"
+    related_validator: mrc/check_general_info
+  mrc_ln:
+    type: string
+    rule_en: "MRC servicer loan number (svcloanid from portmonth)."
+    rule_zh: "MRC servicer 贷款号（portmonth.svcloanid）。"
+    related_validator: mrc/check_general_info
+  dealid:
+    type: string
+    rule_en: "Deal id; portmonth first, falls back to portfunding."
+    rule_zh: "Deal id；优先 portmonth，缺则 portfunding。"
+    related_validator: mrc/check_general_info
+  intrate_remit:
+    type: float
+    rule_en: "Interest rate as reported by servicer (portmonth.intrate)."
+    rule_zh: "Servicer 上报利率（portmonth.intrate）。"
+    related_validator: mrc/check_general_info
+  intrate_daily:
+    type: float
+    rule_en: "Interest rate in daily snapshot (basic_data_daily_loan_common.interest_rate, current month-end)."
+    rule_zh: "Daily 快照利率（basic_data_daily_loan_common.interest_rate，当月末）。"
+    related_validator: mrc/check_general_info
+  intrate_diff_remitvsdaily:
+    type: float
+    rule_en: "intrate_remit − intrate_daily. Non-zero highlighted."
+    rule_zh: "intrate_remit − intrate_daily。非零高亮。"
+    related_validator: mrc/check_general_info
+  nextduedate_remit:
+    type: date
+    rule_en: "Next due date as reported (portmonth.nextduedate)."
+    rule_zh: "Servicer 上报下次到期日（portmonth.nextduedate）。"
+    related_validator: mrc/check_general_info
+  nextduedate_daily:
+    type: date
+    rule_en: "Next due date in daily snapshot (current month-end)."
+    rule_zh: "Daily 快照中的下次到期日（当月末）。"
+    related_validator: mrc/check_general_info
+  nextduedate_diff_remitvsdaily:
+    type: float
+    rule_en: "0 if dates match, 1 if they differ. Non-zero highlighted."
+    rule_zh: "日期相同为 0，不同为 1。非零高亮。"
+    related_validator: mrc/check_general_info
+  begbal_remit:
+    type: decimal
+    format: currency
+    rule_en: "Beginning balance as reported (portmonth.prevbal)."
+    rule_zh: "Servicer 上报期初余额（portmonth.prevbal）。"
+    related_validator: mrc/check_general_info
+  begbal_daily:
+    type: decimal
+    format: currency
+    rule_en: "Beginning balance from daily snapshot (prior month-end principalbalance)."
+    rule_zh: "Daily 快照期初余额（上月末 principalbalance）。"
+    related_validator: mrc/check_general_info
+  begbal_diff_remitvsdaily:
+    type: decimal
+    format: currency
+    rule_en: "begbal_remit − begbal_daily. Non-zero highlighted."
+    rule_zh: "begbal_remit − begbal_daily。非零高亮。"
+    related_validator: mrc/check_general_info
+  endbal_remit:
+    type: decimal
+    format: currency
+    rule_en: "Ending balance as reported (portmonth.balance)."
+    rule_zh: "Servicer 上报期末余额（portmonth.balance）。"
+    related_validator: mrc/check_general_info
+  endbal_daily:
+    type: decimal
+    format: currency
+    rule_en: "Ending balance from daily snapshot (current month-end principalbalance)."
+    rule_zh: "Daily 快照期末余额（当月末 principalbalance）。"
+    related_validator: mrc/check_general_info
+  endbal_diff_remitvsdaily:
+    type: decimal
+    format: currency
+    rule_en: "endbal_remit − endbal_daily. Non-zero highlighted."
+    rule_zh: "endbal_remit − endbal_daily。非零高亮。"
+    related_validator: mrc/check_general_info
+  principal_remit:
+    type: decimal
+    format: currency
+    rule_en: "Principal received per servicer (portmonth.principalreceived)."
+    rule_zh: "Servicer 上报本金收回（portmonth.principalreceived）。"
+    related_validator: mrc/check_general_info
+  interest_remit:
+    type: decimal
+    format: currency
+    rule_en: "Interest received per servicer (portmonth.interestreceived)."
+    rule_zh: "Servicer 上报利息收回（portmonth.interestreceived）。"
+    related_validator: mrc/check_general_info
+  prin_bal_diff_remit:
+    type: decimal
+    format: currency
+    rule_en: "prevbal − balance − principalreceived (should be ~0 for a clean remit)."
+    rule_zh: "prevbal − balance − principalreceived（remit 干净时应 ≈ 0）。"
+    related_validator: mrc/check_general_info
+  deferredprincipal_remit:
+    type: decimal
+    format: currency
+    rule_en: "Deferred principal as reported (portmonth.deferredprin)."
+    rule_zh: "Servicer 上报 deferred principal（portmonth.deferredprin）。"
+    related_validator: mrc/check_general_info
+  deferredprincipal_daily:
+    type: decimal
+    format: currency
+    rule_en: "Deferred principal from daily snapshot (current month-end)."
+    rule_zh: "Daily 快照 deferred principal（当月末）。"
+    related_validator: mrc/check_general_info
+  deferredprincipal_diff_remitvsdaily:
+    type: decimal
+    format: currency
+    rule_en: "deferredprincipal_remit − deferredprincipal_daily. Non-zero highlighted."
+    rule_zh: "deferredprincipal_remit − deferredprincipal_daily。非零高亮。"
+    related_validator: mrc/check_general_info
+  deferredint_remit:
+    type: decimal
+    format: currency
+    rule_en: "Deferred interest as reported (portmonth.deferredint)."
+    rule_zh: "Servicer 上报 deferred interest（portmonth.deferredint）。"
+    related_validator: mrc/check_general_info
+  deferredint_daily:
+    type: decimal
+    format: currency
+    rule_en: "Deferred interest from daily snapshot (current month-end)."
+    rule_zh: "Daily 快照 deferred interest（当月末）。"
+    related_validator: mrc/check_general_info
+  deferredint_diff_remitvsdaily:
+    type: decimal
+    format: currency
+    rule_en: "deferredint_remit − deferredint_daily. Non-zero highlighted."
+    rule_zh: "deferredint_remit − deferredint_daily。非零高亮。"
+    related_validator: mrc/check_general_info
+  pandi_remit:
+    type: decimal
+    format: currency
+    rule_en: "P&I received per servicer (portmonth.pandireceived)."
+    rule_zh: "Servicer 上报 P&I 收回（portmonth.pandireceived）。"
+    related_validator: mrc/check_general_info
+  pandiexpected_daily:
+    type: decimal
+    format: currency
+    rule_en: "Scheduled P&I from daily snapshot (basic_data_daily_loan_common.schedule_pandi_daily)."
+    rule_zh: "Daily 快照计划 P&I（basic_data_daily_loan_common.schedule_pandi_daily）。"
+    related_validator: mrc/check_general_info
+  pandi_schedule_diff_remitvsdaily:
+    type: decimal
+    format: currency
+    rule_en: "coalesce(monthly.sched_pandi, portmonth.pandi) − daily.schedule_pandi_daily. Non-zero highlighted."
+    rule_zh: "coalesce(monthly.sched_pandi, portmonth.pandi) − daily.schedule_pandi_daily。非零高亮。"
+    related_validator: mrc/check_general_info
+  principalreceived_daily:
+    type: decimal
+    format: currency
+    rule_en: "principalpaidmtd from daily snapshot (current month-end)."
+    rule_zh: "Daily 快照 principalpaidmtd（当月末）。"
+    related_validator: mrc/check_general_info
+  interestreceived_daily:
+    type: decimal
+    format: currency
+    rule_en: "interestpaidmtd from daily snapshot (current month-end)."
+    rule_zh: "Daily 快照 interestpaidmtd（当月末）。"
+    related_validator: mrc/check_general_info
+  pandireceived_daily:
+    type: decimal
+    format: currency
+    rule_en: "principalpaidmtd + interestpaidmtd from daily snapshot; null if both are null."
+    rule_zh: "Daily 快照 principalpaidmtd + interestpaidmtd；两者皆空则为空。"
+    related_validator: mrc/check_general_info
+  pandi_diff_remitvsdaily:
+    type: decimal
+    format: currency
+    rule_en: "pandireceived(remit) − pandireceived_daily; null when daily side is fully null."
+    rule_zh: "pandireceived(remit) − pandireceived_daily；daily 侧全空时为空。"
+    related_validator: mrc/check_general_info
+  pandi_paid_times_remit:
+    type: float
+    rule_en: "pandireceived_remit / schedule_pandi_daily; null if scheduled is 0."
+    rule_zh: "pandireceived_remit / schedule_pandi_daily；schedule 为 0 则空。"
+    related_validator: mrc/check_general_info
+  pandi_paid_times_daily:
+    type: float
+    rule_en: "pandireceived_daily / schedule_pandi_daily; null on missing inputs."
+    rule_zh: "pandireceived_daily / schedule_pandi_daily；输入缺失则空。"
+    related_validator: mrc/check_general_info
+  delinquency_status_mba:
+    type: string
+    rule_en: "MBA delinquency status from daily snapshot (delq_status)."
+    rule_zh: "MBA 拖欠状态，取自 daily 快照（delq_status）。"
+    related_validator: mrc/check_general_info
+  asofdate:
+    type: date
+    rule_en: "Remit date (set in Python after SQL)."
+    rule_zh: "Remit 日期（SQL 后在 Python 中赋值）。"
+    related_validator: mrc/check_general_info

@@ -1,0 +1,11 @@
+# Lineage
+
+Dataset-level lineage: source tables → validators → produced sheets.
+Column-level lineage lives on each sheet's column page (auto-extracted via `sqlglot`).
+
+```mermaid
+graph LR
+{% for src, dst in edges %}
+    {{ src|replace(".","_")|replace("/","_")|replace("::","_") }}["{{ src }}"] --> {{ dst|replace(".","_")|replace("/","_")|replace("::","_") }}["{{ dst }}"]
+{% endfor %}
+```

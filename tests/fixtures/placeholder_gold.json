@@ -1,0 +1,6 @@
+{
+  "placeholder_hello": [
+    {"loan_id": "L001", "principal_x2": 200000},
+    {"loan_id": "L002", "principal_x2": 350000}
+  ]
+}

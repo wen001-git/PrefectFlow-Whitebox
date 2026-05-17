@@ -1,0 +1,66 @@
+# Sheet —— {{ s.sheet }}
+
+{{ s.business_meaning_zh }}
+
+**产出该 sheet 的 validators**：{% for vid in s.producing_validators %}[`{{ vid }}`](../validators/{{ vid }}.md){% if not loop.last %}, {% endif %}{% endfor %}
+
+## 字段列表
+
+点击任一字段查看完整逻辑卡片。
+
+| # | 字段 | 类型 | 来源 | 规则（简） |
+|---|---|---|---|---|
+{% for cname, col in columns.items() %}
+| {{ loop.index }} | [`{{ cname }}`](#col-{{ loop.index }}) | `{{ col.type }}` | {% if col.sources %}{% for src in col.sources %}`{{ src.table }}.{{ src.column }}`{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %} | {{ col.rule_zh[:30] }}{% if col.rule_zh|length > 30 %}…{% endif %} |
+{% endfor %}
+
+## 字段逻辑卡片
+
+{% for cname, col in columns.items() %}
+
+### <a name="col-{{ loop.index }}"></a>`{{ cname }}`
+
+| 属性 | 值 |
+|---|---|
+| **类型** | `{{ col.type }}` |
+{% if col.format %}| **格式** | `{{ col.format }}` |
+{% endif %}
+{% if col.related_validator %}| **关联 validator** | [`{{ col.related_validator }}`](../validators/{{ col.related_validator }}.md) |
+{% endif %}
+
+**业务规则（中文）**：{{ col.rule_zh }}
+
+**Business rule (EN)**: {{ col.rule_en }}
+
+{% if col.business_impact_zh %}
+!!! info "业务影响"
+    {{ col.business_impact_zh }}
+{% endif %}
+
+{% if col.sources %}
+**来源**（列级 lineage，由 sqlglot 自动抽取）：
+
+| 上游表 | 上游字段 | 变换 |
+|---|---|---|
+{% for src in col.sources %}
+| `{{ src.table or '(未知)' }}` | `{{ src.column }}` | {% if src.transform %}`{{ src.transform }}`{% else %}—{% endif %} |
+{% endfor %}
+{% else %}
+*（尚未抽取到列级来源——可能 sqlglot 解析失败，或这是纯 Python 列。）*
+{% endif %}
+
+{% if col.expression %}
+**表达式**：
+
+```sql
+{{ col.expression }}
+```
+{% endif %}
+
+{% if col.sample_values %}
+**样例值**：{% for sv in col.sample_values %}`{{ sv }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+
+---
+
+{% endfor %}

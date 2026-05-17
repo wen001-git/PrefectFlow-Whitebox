@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# venv / uv
+.venv/
+.python-version
+
+# IDE
+.vscode/
+.idea/
+
+# MkDocs build
+site/
+
+# Local snapshots (large; produced by tools/freeze_snapshot.py)
+# Keep folder structure with .gitkeep, ignore actual data
+snapshots/**/raw/
+snapshots/**/gold/
+snapshots/**/landed/
+snapshots/**/vendor/
+!snapshots/**/.gitkeep
+!snapshots/**/README.md
+
+# Diff reports
+diff_report*.html
+diff_report*.json
+
+# Secrets
+.env
+.env.*
+!.env.example

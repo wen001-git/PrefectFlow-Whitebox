@@ -1,0 +1,92 @@
+sheet: MRC_Summary_check
+business_meaning_en: |
+  Single-row aggregate of all MRC loans' remit-month financials for sanity-checking the
+  total volume reported by the servicer.
+business_meaning_zh: |
+  对当月所有 MRC 贷款的 remit 关键金额做单行聚合，用于核对 servicer 上报总量是否合理。
+producing_validators:
+  - mrc/summary_check
+columns:
+  principalreceived:
+    type: decimal
+    format: currency
+    rule_en: "Sum of principalreceived across all MRC loans for the current fctrdt."
+    rule_zh: "当期 fctrdt 所有 MRC 贷款 principalreceived 的总和。"
+    related_validator: mrc/summary_check
+  interestreceived:
+    type: decimal
+    format: currency
+    rule_en: "Sum of interestreceived across all MRC loans for the current fctrdt."
+    rule_zh: "当期 fctrdt 所有 MRC 贷款 interestreceived 的总和。"
+    related_validator: mrc/summary_check
+  escrowadv_chg:
+    type: decimal
+    format: currency
+    rule_en: "Sum of escrowadv_chg (escrow advance change) across all MRC loans."
+    rule_zh: "所有 MRC 贷款 escrowadv_chg（escrow advance 变动）的总和。"
+    related_validator: mrc/summary_check
+  corpadvrec_chg:
+    type: decimal
+    format: currency
+    rule_en: "Sum of recoverable corp advance change (corpadvrec_chg)."
+    rule_zh: "可回收 corp advance 变动（corpadvrec_chg）的总和。"
+    related_validator: mrc/summary_check
+  corpadvnonrec_chg:
+    type: decimal
+    format: currency
+    rule_en: "Sum of non-recoverable corp advance change (corpadvnonrec_chg)."
+    rule_zh: "不可回收 corp advance 变动（corpadvnonrec_chg）的总和。"
+    related_validator: mrc/summary_check
+  corpadvtotal_chg:
+    type: decimal
+    format: currency
+    rule_en: "Sum of total corp advance change (recoverable + non-recoverable)."
+    rule_zh: "全部 corp advance 变动（可回收 + 不可回收）的总和。"
+    related_validator: mrc/summary_check
+  servicefee:
+    type: decimal
+    format: currency
+    rule_en: "Sum of base service fee across all MRC loans."
+    rule_zh: "所有 MRC 贷款基础服务费的总和。"
+    related_validator: mrc/summary_check
+  otherfees:
+    type: decimal
+    format: currency
+    rule_en: "Sum of other fees across all MRC loans."
+    rule_zh: "所有 MRC 贷款其他费用的总和。"
+    related_validator: mrc/summary_check
+  totalservicefee:
+    type: decimal
+    format: currency
+    rule_en: "Sum of servicefee + otherfees across all MRC loans."
+    rule_zh: "所有 MRC 贷款 servicefee + otherfees 的总和。"
+    related_validator: mrc/summary_check
+  subremit:
+    type: decimal
+    format: currency
+    rule_en: "Sum of subremit across all MRC loans."
+    rule_zh: "所有 MRC 贷款 subremit 的总和。"
+    related_validator: mrc/summary_check
+  totremit:
+    type: decimal
+    format: currency
+    rule_en: "Sum of totremit across all MRC loans."
+    rule_zh: "所有 MRC 贷款 totremit 的总和。"
+    related_validator: mrc/summary_check
+  beginningbalance:
+    type: decimal
+    format: currency
+    rule_en: "Sum of prevbal (beginning balance) across all MRC loans."
+    rule_zh: "所有 MRC 贷款 prevbal（期初余额）的总和。"
+    related_validator: mrc/summary_check
+  endingbalance:
+    type: decimal
+    format: currency
+    rule_en: "Sum of balance (ending balance) across all MRC loans."
+    rule_zh: "所有 MRC 贷款 balance（期末余额）的总和。"
+    related_validator: mrc/summary_check
+  asofdate:
+    type: date
+    rule_en: "Remit date (set in Python after aggregation)."
+    rule_zh: "Remit 日期（聚合后在 Python 中赋值）。"
+    related_validator: mrc/summary_check

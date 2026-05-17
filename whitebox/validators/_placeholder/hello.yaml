@@ -1,0 +1,25 @@
+id: _placeholder/hello
+servicer: _placeholder
+name: hello
+title_en: "Placeholder: Hello validator"
+title_zh: "占位：Hello validator"
+description_en: |
+  Synthetic validator used only to self-test the Phase 1 doc
+  infrastructure (registry, lineage, autodoc, harness). Not a real
+  business validator. Will be deleted before Phase 3 cleanup.
+description_zh: |
+  仅用于 Phase 1 文档基础设施自检的合成 validator（registry、lineage、
+  autodoc、harness），不是真业务 validator。Phase 3 清理时删除。
+related_sheets:
+  - placeholder_hello
+source_tables:
+  - public.placeholder_input
+source_citation: "whitebox/validators/_placeholder/hello.py:1"
+rule_en: "For each row in placeholder_input, copy loan_id and compute principal_x2 = principal * 2."
+rule_zh: "对 placeholder_input 表每一行，拷贝 loan_id 并计算 principal_x2 = principal * 2。"
+rule_business_impact_en: "If broken, the placeholder sheet shows wrong doubled values; no business impact."
+rule_business_impact_zh: "若失效，占位 sheet 显示错误的翻倍值；无业务影响。"
+sql_file: hello.sql
+tags:
+  - selftest
+  - placeholder

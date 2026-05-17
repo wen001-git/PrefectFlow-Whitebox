@@ -1,0 +1,36 @@
+id: mrc/service_fee_check
+servicer: mrc
+name: service_fee_check
+title_en: "MRC Service Fee Check"
+title_zh: "MRC 服务费核对"
+description_en: |
+  Loan-level service-fee reconciliation: compare MRC's loan-level remit recap
+  (portmrcremitloanlevelrecap) against the consolidated portmonth servicefee for each
+  loan, flagging discrepancies.
+description_zh: |
+  贷款级服务费对账：把 MRC 的贷款级 remit 明细（portmrcremitloanlevelrecap）与
+  portmonth 中合并后的 servicefee 字段逐贷比对，发现差异即标记。
+related_sheets:
+  - MRC_ServiceFee_Check
+source_tables:
+  - mrc.portmrcremitloanlevelrecap
+  - port.portmonth
+  - port.portfunding
+source_citation: "flow/remit_validation/mrc_validation.py:75"
+rule_en: |
+  For each row in mrc.portmrcremitloanlevelrecap at the current fctrdt, left-join to
+  port.portmonth (MRC) on (fctrdt, loanid) and to port.portfunding on loanid for dealid
+  fallback. Output servicefee_remit_raw (from recap), servicefee_portmonth, and their
+  difference. Any non-zero servicefee_diff indicates an aggregation mismatch.
+rule_zh: |
+  对 mrc.portmrcremitloanlevelrecap 当期 fctrdt 的每一行，左关联 port.portmonth（MRC）
+  on (fctrdt, loanid)，并左关联 port.portfunding on loanid 取 dealid。输出
+  servicefee_remit_raw（来自 recap）、servicefee_portmonth 与两者差额。
+  servicefee_diff 非零即提示聚合不一致。
+rule_business_impact_en: "Service fee errors directly affect servicer revenue recognition."
+rule_business_impact_zh: "服务费错误直接影响 servicer 收入确认。"
+sql_file: null    # Filled in mrc-v4-doc
+tags:
+  - mrc
+  - service_fee
+  - stub

@@ -1,0 +1,30 @@
+sheet: placeholder_hello
+business_meaning_en: Selftest sheet — doubled principals for placeholder loans.
+business_meaning_zh: 自检 sheet —— 占位贷款的本金翻倍结果。
+producing_validators: [_placeholder/hello]
+columns:
+  loan_id:
+    type: string
+    rule_en: Loan identifier, copied from source.
+    rule_zh: 贷款 ID，从源表拷贝。
+    sample_values: [L001, L002]
+    related_validator: _placeholder/hello
+    sources:
+    - table: placeholder_input
+      column: loan_id
+      transform: null
+    expression: placeholder_input.loan_id AS loan_id
+  principal_x2:
+    type: decimal
+    format: currency
+    rule_en: Principal doubled (selftest computation only).
+    rule_zh: 本金乘以 2（仅用于自检计算）。
+    business_impact_en: Selftest only; no business impact.
+    business_impact_zh: 仅自检使用；无业务影响。
+    sample_values: [200000, 350000]
+    related_validator: _placeholder/hello
+    sources:
+    - table: placeholder_input
+      column: principal
+      transform: null
+    expression: placeholder_input.principal * 2 AS principal_x2

@@ -1,0 +1,39 @@
+# {{ v.title_zh }}
+
+**ID**：`{{ v.id }}` &nbsp;&nbsp; **Servicer**：`{{ v.servicer }}` &nbsp;&nbsp; **源码出处**：`{{ v.source_citation }}`
+
+{% if v.description_zh %}{{ v.description_zh }}{% endif %}
+
+## 业务规则
+
+{{ v.rule_zh }}
+{% if v.rule_business_impact_zh %}
+!!! info "业务影响"
+    {{ v.rule_business_impact_zh }}
+{% endif %}
+
+## 产出 sheets
+
+{% for s in sheets %}
+- [{{ s.name }}](../../sheets/{{ s.name }}.md) —— {{ s.data.business_meaning_zh }}
+{% endfor %}
+
+## 源数据表
+
+{% for t in v.source_tables %}
+- `{{ t }}`
+{% endfor %}
+
+{% if sql %}
+## SQL
+
+```sql
+{{ sql }}
+```
+{% else %}
+*（纯 Python validator，无外部 SQL 文件。）*
+{% endif %}
+
+{% if v.tags %}
+**标签**：{% for t in v.tags %}`{{ t }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}

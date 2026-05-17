@@ -1,0 +1,85 @@
+# Decisions log
+
+> Append-only. One bullet per meaningful decision.
+> Format: `YYYY-MM-DD — <decision> — <one-line rationale>`.
+> Newest at the bottom.
+
+---
+
+## 2026-05-16 — Initial bootstrap decisions (from plan v6 discussion)
+
+- **2026-05-16 — Drop Dagster; use plain Python + YAML + MkDocs + DuckDB + sqlglot stack** — PrefectFlow validators are Python wrappers around Redshift SQL, not pure SQL; DBT would force Python→SQL rewrite (bigger lift); Dagster's main value is orchestration which Prefect already provides upstream.
+- **2026-05-16 — Doc-first applied per validator, not per project** — Avoids front-loading 47 validator docs before the doc infrastructure is empirically validated (would cause schema-rework cascade).
+- **2026-05-16 — Pilot servicer = MRC (5 validators)** — Enough validators to stress-test multi-validator + multi-sheet lineage; CC5 (2 validators) is too small and would give false confidence.
+- **2026-05-16 — Equivalence target = data-equivalent, not bit-equivalent** — Per-sheet `(sorted_row, column, value)` tuple equality after type normalization + 1e-6 float tolerance; cell format/sheet order/column widths may differ; original bugs go to `docs/known-deltas.md` rather than being reproduced (stronger audit evidence).
+- **2026-05-16 — YAML schema is two-layer: validators + sheets/columns** — A separate `sheets/<sheet>.yaml` with per-column metadata is required for per-field whitebox display (validator-only schema cannot answer "what's the logic for this column?").
+- **2026-05-16 — Use `sqlglot` for column-level lineage auto-extraction** — Manual lineage maintenance is unsustainable; sqlglot parses validator SQL and derives `output_col ← f(input_table.col, …)` automatically, back-filled into sheet YAMLs.
+- **2026-05-16 — ETL scope = narrow (Redshift → validators → report)** — Build for the environment that already works (Vault token + Redshift VPN + `run_remit_validation.py` wrapper, verified in LearningLog session 04). Upstream vendor-file ingestion is out of scope; black-boxed in the doc site. Reason for narrowing from v5: avoid introducing unverified prerequisites (vendor file accessibility, ingestion ETL complexity).
+- **2026-05-16 — Pilot reference date = 2026-04-30** — Gold XLSX already exists at `PrefectFlow-LearningLog/docs/remit-validation-report/20260430/`.
+- **2026-05-16 — Repo location = sibling at `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\`** — Keeps source repo read-only; mirrors the LearningLog pattern.
+- **2026-05-16 — Doc conventions = README + AGENTS.md + plan.md + progress.md (merged progress+handoff) + decisions.md + prompts.md** — Same pattern proven in PrefectFlow-LearningLog; explicitly merge progress + handoff because they answer the same question at different timescales.
+- **2026-05-16 — Spike gate after MRC pilot, 3-way decision** — Continue rolling / Refactor infra first / Scope cut. Prevents over-commitment before the doc infra is validated end-to-end on a real servicer.
+
+## 2026-05-16 — MRC validator 实施顺序：v1 → v4 → v5 → v2 → v3
+理由：先做 v1（单行聚合，最简）建立 YAML+harness 闭环信心；v4 次小且 SQL 自包含；v5 提早隔离 Python merge 这个不同质点；v2/v3 SQL 最大（~30 列），放最后让 sqlglot 在小 case 验证过后再压力测试，且 v2/v3 结构相近可复用。来源：docs/servicers/mrc/scope.{en,zh}.md。
+
+## 2026-05-16 — Process rule: never self-mark human-review steps as done
+
+**Triggered by**: 把 Phase 1.5 自动化测试通过当成整个 Phase 1.5 done，跳过了 plan
+里明确写的"手工 review：站点上点开占位 sheet → 看到占位 column 的完整逻辑卡片"。
+之后又顺势把 mrc-scope / mrc-sheets-yaml / mrc-gold 全标 done，但用户从未审阅过。
+
+**Rule**:
+
+1. 任何 plan / progress 中显式写了"手工 review"、"用户审阅"、"用户确认"、
+   "business review" 等需要用户参与的步骤，**只有用户明确说"通过"才能标 done**。
+   AI 不能自行勾掉，也不能默认"用户没说话就是 OK"。
+2. 跳过 plan 里的步骤时必须**主动告诉用户**，并在 progress.md 里用 `[/]`
+   或 `⏳` 标出"未完成"，绝不能用 `[x]`。
+3. 当一个 phase 的 gate（如 Phase 1.5 → Phase 2 的"全过才能进 Phase 2"）
+   未满足时，**所有依赖该 phase 的下游 todo 必须暂停**，不能因为"看上去可以做"
+   就继续。
+4. 每个 phase 结束时，列出本 phase plan 里的每一条要求，逐条说明：
+   - 自动化部分完成情况
+   - 需要用户参与的部分（review/approve）— 是否已请用户做、用户是否回复
+
+## 2026-05-16 - 阶段 1 文档采用双语并行 / Stage 1 docs go bilingual paragraph-pair
+
+中文先一段，紧跟英文一段，同一文件内交替。不再拆 .zh.md / .en.md 分文件。
+
+Each Chinese paragraph is immediately followed by its English counterpart in the same file. Stop splitting into .zh.md / .en.md i18n variants for Stage 1 deliverables.
+
+
+## 2026-05-16 (revised) - 阶段 1 文档恢复分文件双语 / Stage 1 docs revert to split-file bilingual
+
+用户反馈：段对段交替阅读体验差。改回独立 .zh.md / .en.md 两个文件。
+
+User feedback: paragraph-pair interleaving hurts readability. Reverting to separate .zh.md / .en.md files per chapter.
+
+
+## 2026-05-16 - End-of-stage 自动测试 + 测试报告规则 / Mandatory end-of-stage tests + report
+
+每个 stage todo（阶段 1 章节、阶段 2 交付物）完成时必须：跑测试矩阵 → 写 test_reports/<todo-id>_YYYY-MM-DD.md → 全 PASS 才能 done。规则细节见 AGENTS.md § 6.5 / 6.6。
+
+Every stage todo (Stage 1 chapter or Stage 2 deliverable) must run the test matrix, produce a report under test_reports/<todo-id>_YYYY-MM-DD.md, and only then be marked done. Full rule in AGENTS.md sections 6.5 / 6.6.
+
+
+## 2026-05-17 — v9.1 pivot to MRC-only with placeholder-everywhere rule
+
+- **2026-05-17 — Scope narrowed to MRC servicer only** (user prompt 37) — analysis bandwidth focused on one servicer end-to-end (raw → unified → validators → 5 sheets → XLSX); other servicers retain placeholder stubs so they are not forgotten.
+- **2026-05-17 — Stage 2 equivalence bar = cell-identical XLSX** (ask 1 → option A) — sheet names, sheet order, column order, headers, every cell value, and highlight colors must match byte-for-byte vs a frozen production baseline; supersedes the v6 `data-equivalent'' bar for MRC.
+- **2026-05-17 — Non-MRC chapters archived, not deleted** (ask 2 → option A) — 	oc / overall-flow / carrington / shellpoint (zh+en) move to docs/_archived/pre-mrc-pivot/, removed from mkdocs nav, kept as cross-servicer pattern reference.
+- **2026-05-17 — Frozen pre-v8 MRC pilot assets un-frozen as Stage 2 inputs** (ask 3 → option A) — sheets/MRC_*.yaml, gold JSONs, whitebox/validators/, related tools become live starting points; not bound by their old structure (rewrite freely).
+- **2026-05-17 — Stage 2 includes interactive UI from prompt 19** (ask 4 → option 2) — 8 features (date/servicer picker, per-sheet logic viewer, lineage, pass/fail explanations, validator details, export, comparison) ship as part of Stage 2; engine and logic correctness take priority over UI polish; UI lightweight initially but must already expose validation transparency.
+- **2026-05-17 — Placeholder-everywhere rule for pending servicers** (user prompt 38) — every plan/doc/registry/lineage/architecture artifact must reserve explicit placeholders for un-analyzed servicers (arvest/cc5/selene/sls/scattered/dataflow). Single source of truth = servicer status matrix in plan.md, mirrored into docs/_status/servicers-registry.{zh,en}.md and validator registry tool output. AGENTS.md gains § 6.8 enforcing same-commit registry updates.
+- **2026-05-17 — SQL status for paused non-MRC todos = pending-deferred, not locked/rozen** — keeps them visible in active todo queries so they are not silently dropped; differentiates from truly cancelled work.
+- **2026-05-17 — Mermaid node-ID legend rule (AGENTS.md § 6.9)** — any dataflow figure that uses short IDs (`T#` / `V#` / `SH#` / `R#` / …) must be followed immediately by a legend table mapping each ID to its real source/business name, plus the one-sentence reminder that IDs are display-only cross-references. Triggered by user prompt 39 (Shellpoint screenshot with unexplained `SH1` / `V2` in prose). Applied retroactively to the 4 archived chapters and promoted into plan.md `Per-chapter conventions`.
+- **2026-05-17 — Stage 1 baseline `remit_date` pinned to 2026-04-30** — all Stage 1 MRC chapters cite this single date for example rows, expected counts, and baseline XLSX captures. Rationale: 5 `sheets/MRC_*.yaml` + 5 `snapshots/2026-04-30/gold/MRC_*.json` already exist for this date (un-frozen at v9.1), so reuse is zero-cost and removes the "which date?" decision from every chapter. Stage 2 cell-identity harness will parameterize over `(servicer, remit_date)` later; Stage 1 needs only one date.
+- **2026-05-17 — Registry tool servicer-state awareness (cleanup C6 / B step)** — `docs/_status/servicers.yaml` is the machine-readable mirror of `docs/_status/servicers-registry.{zh,en}.md`; loaded + cross-checked by `tools/registry.py`. Pending-analysis servicers must have an existing `placeholder_doc` and no validator/sheet YAMLs; analyzed servicers must clear `placeholder_doc`. Covered by `tests/test_registry_servicers.py`.
+
+- 2026-05-17 — MRC validator count corrected to 5 (incl. `mrc_other_check`) — earlier plan v9.1 drafts and 2 checkpoints stated "4 validators, no mrc_other_check"; source re-read of `mrc_validation.py:136-158` + `remit_validation.py:143` confirms `mrc_other_check` is a fully-defined `@task` whose output renders the `MRC_Adv_Info` sheet. Propagated to `docs/_status/servicers.yaml` (registry md was already correct) and recorded in `docs/mrc/toc.{zh,en}.md` § 5.
+- 2026-05-17 — Project rule AGENTS.md § 6.10 / User rule § 7 added: diagram + text co-requirement — any workflow / dataflow / ETL / validation flow / system-interaction doc must include both a diagram and a 5-bullet textual explanation (business purpose, execution flow, input/output, key transformations, dependencies/assumptions); complex logic needs an overview + decomposed sub-process diagrams. Applied retroactively to `docs/mrc/dataflow.{zh,en}.md` (v2 refine): added 5 per-validator sub-diagrams (Figures 1.2.4 – 1.2.8) and 5-bullet blocks under every figure; renumbered sequence diagram 1.2.7 → 1.2.9. Tests: 14/14 PAIRS align, 510 citations PASS, pytest 14/14, mkdocs --strict ✅.
+
+- **2026-05-17 — MRC 章节引用风格统一 (xref readability overhaul)** — 所有跨章节引用必须采用三元素形式 `<num> <Title> (<file>.md)`，例如 `1.4 字段定义 (fields.zh.md)` / `1.4 Field Definitions (fields.en.md)`。单一真相源 = `docs/mrc/_chapter-index.md`（任何章节名/文件名变更必须先在该文件落地，再传播到其它文档）。传播工具 = `tools/rewrite_xrefs.py` + `tools/cleanup_xrefs.py`（idempotent）。执行范围：`docs/mrc/*.md` × 12 + `progress.md` + `test_reports/stage1-mrc-*.md` × 8；自引用例外 = 同文件内 `§ 4.1` 无需带章节名；非 MRC 章节（`1.2.1` Carrington / `1.2.2` Shellpoint）保留原编号方案。变更记录 = `test_reports/stage1-mrc-xref-readability_2026-05-17.md`。验证：17/17 PAIRS + 698 citations PASS, pytest 14/14, mkdocs --strict ✅。理由：长 reverse-engineering session 中数字 ID 难记、对 AI context 不友好；三元素形式同时给人类和 AI 提供消歧。
+
+- **2026-05-17 — MRC sheet 级 Business purpose / 业务用途 子章节强制** — 每张 MRC Validation Report sheet 在 docs/mrc/sheets.{zh,en}.md 与 docs/mrc/fields.{zh,en}.md 的对应章节都必须有 ### Business purpose / 业务用途 子章节，解释：业务用途、业务问题、数据口径、读者、设计意图 / 高亮理由、常见失败场景、风险 / 对账动机。采用**无编号**子章节以保留 X.1/X.2 既有编号；hidden 标记 <!-- BUSINESS-PURPOSE-V1 --> 保 idempotency。sheets.*.md 侧着重页面 / 渲染 / 读者，ields.*.md 侧着重列血缘 / 维护者，两侧用 Division with bullet 明确分工。工具：	ools/insert_business_purpose.py + 	ools/clean_business_purpose_label.py。验证：17/17 PAIRS + 698 citations PASS, pytest 14/14, mkdocs --strict ✅。变更记录 = 	est_reports/stage1-mrc-business-purpose_2026-05-17.md。理由：从代码逆向演进到业务 + 数据 + validation 语义——让 BA / ops / validators / 重写者读懂为什么有这一页，而不只是代码怎么写。

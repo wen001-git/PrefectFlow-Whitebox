@@ -1,0 +1,31 @@
+id: mrc/summary_check
+servicer: mrc
+name: summary_check
+title_en: "MRC Summary Check"
+title_zh: "MRC 汇总校验"
+description_en: |
+  Single-row aggregate sums of all MRC loans' remit-month financials for sanity-checking
+  the total volume reported by the servicer.
+description_zh: |
+  对当月所有 MRC 贷款的 remit 关键金额做单行聚合汇总，用于核对 servicer 上报的总量是否合理。
+related_sheets:
+  - MRC_Summary_check
+source_tables:
+  - port.portmonth
+source_citation: "flow/remit_validation/mrc_validation.py:8"
+rule_en: |
+  Sum 13 financial fields (principal/interest received, escrow & corp advance changes,
+  service fees, sub-remit & total remit, beginning & ending balance) across all rows in
+  port.portmonth where servicer='MRC' and fctrdt = current factor date. Single-row output
+  with asofdate = remit_date.
+rule_zh: |
+  对 port.portmonth 表里 servicer='MRC' 且 fctrdt=当期因子日 的所有行，求和 13 个金额字段
+  （本金/利息收回、escrow 与 corp advance 变动、服务费、sub-remit 与 total remit、期初与期末余额）。
+  输出单行，asofdate=remit_date。
+rule_business_impact_en: "If totals are wrong, the entire MRC monthly remittance file is suspect."
+rule_business_impact_zh: "若汇总错误，整份 MRC 当月 remit 文件均可疑。"
+sql_file: null    # Inline SQL in Python; will be extracted to summary_check.sql in mrc-v1-doc
+tags:
+  - mrc
+  - summary
+  - stub

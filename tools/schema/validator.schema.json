@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "validator.schema.json",
+  "title": "Validator metadata",
+  "type": "object",
+  "required": ["id", "servicer", "name", "title_en", "title_zh", "related_sheets", "source_tables", "source_citation", "rule_en", "rule_zh"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9_]+/[a-z0-9_]+$"},
+    "servicer": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "name": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "title_en": {"type": "string", "minLength": 1},
+    "title_zh": {"type": "string", "minLength": 1},
+    "description_en": {"type": "string"},
+    "description_zh": {"type": "string"},
+    "related_sheets": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "source_tables": {"type": "array", "items": {"type": "string"}, "minItems": 0},
+    "source_citation": {"type": "string", "pattern": ".+:[0-9]+$"},
+    "rule_en": {"type": "string", "minLength": 1},
+    "rule_zh": {"type": "string", "minLength": 1},
+    "rule_business_impact_en": {"type": "string"},
+    "rule_business_impact_zh": {"type": "string"},
+    "sql_file": {"type": ["string", "null"]},
+    "tags": {"type": "array", "items": {"type": "string"}}
+  }
+}

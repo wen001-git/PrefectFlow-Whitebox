@@ -1,0 +1,11 @@
+# Lineage（数据血缘）
+
+Dataset 级血缘：source tables → validators → 产出 sheets。
+列级 lineage 在每个 sheet 的字段页（由 `sqlglot` 自动抽取）。
+
+```mermaid
+graph LR
+{% for src, dst in edges %}
+    {{ src|replace(".","_")|replace("/","_")|replace("::","_") }}["{{ src }}"] --> {{ dst|replace(".","_")|replace("/","_")|replace("::","_") }}["{{ dst }}"]
+{% endfor %}
+```
