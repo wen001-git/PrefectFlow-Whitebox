@@ -232,3 +232,16 @@ The UI must:
 - Tech-stack DEFERRED (Q2 in plan.md § 5 is unanswered) — present trade-offs
 
 [... full deliverables spec — see commit message ...]
+
+## 2026-05-17 — G2a A1 SQL coverage scan
+
+1. You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox`. The source repo to be reverse-engineered lives at `C:\Users\jli\MyData\Copilot\PrefectFlow` (READ-ONLY — never edit).
+
+# Your task: G2a A1 — Full MRC SQL coverage scan
+
+## Context
+- G2 was redefined: instead of freezing Redshift, we freeze the **input dataset** (Parquet snapshots) so legacy MRC code can be replayed offline.
+- The current `tools/freeze_snapshot.py plan` subcommand uses a naive AST scanner and only found 3 SQL strings in `flow/remit_validation/mrc_validation.py`. We KNOW chapter 1.2 of our docs mentions at least 2 larger templates (`mrc_adv_validation` ~50 lines, `mrc_general_check` ~71 lines) that were missed.
+- We need an exhaustive coverage table BEFORE the operator runs the export. That's the deliverable.
+
+[... full task spec as provided ...]

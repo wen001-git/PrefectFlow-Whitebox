@@ -1,9 +1,12 @@
--- auto-extracted by tools/freeze_snapshot.py plan
--- source: flow\remit_validation\mrc_validation.py :: mrc_service_fee_check
--- servicer: mrc
+-- auto-extracted by tools/freeze_snapshot.py plan (v2.0)
+-- source: flow/remit_validation/mrc_validation.py :: mrc_service_fee_check (lines 79–96)
+-- servicer: mrc  flag: MRC-relevant
 -- remit_date: 2026-04-30
+-- pattern: f-string
 -- placeholders to resolve: mrc_db.fctrdt
--- notes: auto-extracted; resolve `{...}` placeholders before export
+-- placeholder hints:
+--   mrc_db.fctrdt: factor-date (YYYY-MM-01) for remit cycle, e.g. '2026-05-01'
+-- notes: resolve 1 placeholder(s) before export
 
 select
                 r.fctrdt,

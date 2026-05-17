@@ -89,5 +89,21 @@ Every stage todo (Stage 1 chapter or Stage 2 deliverable) must run the test matr
 - **2026-05-17 — MRC 章节文件名前缀化** — docs/mrc/{toc,rawdata,dataflow,sheets,fields,rules,baseline}.{zh,en}.md 全部重命名为 1.N-{base}.{lang}.md（与文档 H1 编号一致，与 1.x xref 约定对齐），文件浏览器侧栏可直接按序号排序；同步更新 mkdocs.yml nav、	ools/stage_doc_checks.py PAIRS、	ools/insert_business_purpose.py / clean_business_purpose_label.py 内的硬编码路径、docs/mrc/_chapter-index.md 基名列、_chapter-index-snippet.{zh,en}.md、所有 test_reports/*、progress.md、decisions.md 中的 xref。_archived/ 路径保留旧名（归档不动）。验证：18/18 PAIRS ALIGN OK、734 citations PASS、pytest 14/14、mkdocs --strict ✅。
 
 - **2026-05-17 — G1 (stage1-mrc-review) closed: provisional sign-off with iterative refinement allowed** — 用户决定 MRC Stage 1 章节 1.0-1.6 当前覆盖度已可接受，剩余的 minor gaps（1.6 § 9 V1-V12 等 [VERIFY] 项、1.4 § 5/§ 6 几处 inferred 字段、1.3 几处 assumption 块）不阻塞 Stage 2 推进；后续以 incremental refinement 方式回写。规则化为 AGENTS.md § 6.11 (living docs + 3-tier marker [CONFIRMED] / [VERIFY] / [FOUND-DURING-STAGE2])。Stage 2 实现仍受 2 个 hard gate 约束：G2 (mrc-snapshot + mrc-source-baseline 产出 aselines/mrc/2026-04-30/validation_report.xlsx) + G3 (stage1-mrc-baseline-verify 把 V1-V12 升到 [CONFIRMED])。**Stage 2 设计层（feature-list / SRS / data-model / ui-design / dev-plan + 新增 extensibility-spec）即刻开闸**，可与 G2/G3 并行推进。SQL todo 状态：done +5 (G1 + 4 helper)、新增 2 个 (stage1-mrc-baseline-verify blocked, stage2-mrc-extensibility-spec pending)、design-tier 5 个由 blocked → pending；impl-tier 7 个继续 blocked 在 G2+G3+extensibility-spec 上。
-
+
 - **2026-05-17 — G2 redefinition (`gate-G2`): from "freeze Redshift" → "freeze the input dataset"** — 用户决定公司 Redshift 数据库本身无法冻结；G2 改为冻结**产出 MRC `2026-04-30` validation report 所需的精确输入数据集**到本地。拆为两个子门：**G2a (`mrc-snapshot`)** = 把 5 个 MRC validator 实际读取的所有 Redshift 表 / SQL / 过滤后数据集导出到 `baselines/mrc/2026-04-30/input_snapshots/`（Parquet 优先，CSV 可选），每个数据集都有 `_manifest.json` 条目（含 `source` / `export_sql_path` / `filter` / `exported_at` / `exporter` / `format` / `path` / `row_count` / `column_count` / `columns[]` / `sha256_file` / `sha256_canonical_rows` / `redshift_session`）+ 逐字 SQL 存 `_export_queries/*.sql`；**G2b (`mrc-source-baseline` + `mrc-gold`)** = 用 Parquet-reading shim 替换 Redshift adapter，跑**原版** `flow/remit_validation` MRC 代码 → 产出 `validation_report.xlsx` + `manifest.json`，与 `PrefectFlow-LearningLog/docs/remit-validation-report/20260430/` 的 gold XLSX 对账。**G2a 必须由有 Redshift VPN+凭据的人执行**（用户或同事）；agent 负责写 `tools/freeze_snapshot.py` + `tools/legacy_adapter.py`，并在 snapshot 落地后完成 G2b 与 G3。**Stage 2 运行时不再依赖 live Redshift**——本地 frozen snapshot 是可复现性的唯一来源。存储默认走 Git LFS（`baselines/**/*.parquet` + `baselines/**/*.xlsx`），manifest + SQL 作为普通文件提交。详细 binding spec 在 session plan.md § 4.2。
+
+## 2026-05-17 — G2a A1 — SQL coverage scan complete
+
+- **2026-05-17 — G2a A1 deliverable shipped**: exhaustive MRC SQL coverage scan completed
+  via enhanced `tools/freeze_snapshot.py plan` (v2.0). Scanner upgraded from naive 2-file
+  AST scan (found 3 SQL strings) to a recursive import-walker that follows `flow/` import
+  edges transitively and handles 8 SQL-detection patterns. Re-scan of MRC entry files
+  (`mrc_validation.py`, `mrc_db.py`) + transitive imports (5 files total) found **21 SQL
+  strings** (8 MRC-relevant), up from 3. The 2 chapter-1.2-listed templates previously
+  missed (`mrc_adv_validation` ~50 lines and `mrc_general_check` ~71 lines, both in
+  `servicer_validation_with_portdaily.py`) are now detected. All 5 chapter-1.2 catalog
+  entries confirmed ✅. Coverage delta section in `_coverage.md` shows **no A2 targets**
+  (zero templates still missing). Output: 21 `.sql` files under
+  `baselines/mrc/2026-04-30/input_snapshots/_export_queries/template/`, updated
+  `_plan_index.json`, and `_export_queries/_coverage.md`. Scanner gains `--min-expected`
+  flag (default 5) for CI gate enforcement.

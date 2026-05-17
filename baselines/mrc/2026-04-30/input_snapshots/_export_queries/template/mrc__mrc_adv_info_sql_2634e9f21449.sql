@@ -1,9 +1,12 @@
--- auto-extracted by tools/freeze_snapshot.py plan
--- source: flow\remit_validation\mrc_validation.py :: _mrc_adv_info_sql
--- servicer: mrc
+-- auto-extracted by tools/freeze_snapshot.py plan (v2.0)
+-- source: flow/remit_validation/mrc_validation.py :: _mrc_adv_info_sql (lines 106–133)
+-- servicer: mrc  flag: MRC-relevant
 -- remit_date: 2026-04-30
+-- pattern: f-string
 -- placeholders to resolve: fctrdt
--- notes: auto-extracted; resolve `{...}` placeholders before export
+-- placeholder hints:
+--   fctrdt: factor-date parameter (YYYY-MM-01), e.g. '2026-05-01'
+-- notes: resolve 3 placeholder(s) before export
 
 select
             'nonrecovcorpadv' as bucket,

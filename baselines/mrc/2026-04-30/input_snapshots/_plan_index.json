@@ -1,38 +1,517 @@
 {
   "manifest_version": "1.0",
+  "tool_version": "2.0",
   "servicer": "mrc",
   "remit_date": "2026-04-30",
+  "scan_timestamp": "2026-05-17T16:17:36Z",
   "legacy_root": "C:\\Users\\jli\\MyData\\Copilot\\PrefectFlow",
+  "files_scanned": [
+    "flow/remit_validation/mrc_db.py",
+    "flow/remit_validation/mrc_validation.py",
+    "flow/remit_validation/carrington_db.py",
+    "flow/remit_validation/utils.py",
+    "flow/remit_validation/servicer_validation_with_portdaily.py"
+  ],
+  "total_sql_strings": 21,
+  "mrc_relevant_count": 8,
   "entries": [
     {
-      "logical_name": "mrc_mrc_validation_mrc_summary_check_e943649b57cd",
-      "source_module": "flow\\remit_validation\\mrc_validation.py",
+      "logical_name": "mrc__mrc_summary_check_e943649b57cd",
+      "source_module": "flow/remit_validation/mrc_validation.py",
       "source_function": "mrc_summary_check",
       "sql": "select\n                sum(principalreceived) as principalreceived,\n                sum(interestreceived) as interestreceived,\n                sum(escrowadv_chg) as escrowadv_chg,\n                sum(corpadvrec_chg) as corpadvrec_chg,\n                sum(corpadvnonrec_chg) as corpadvnonrec_chg,\n                sum(corpadvtotal_chg) as corpadvtotal_chg,\n                sum(servicefee) as servicefee,\n                sum(otherfees) as otherfees,\n                sum(servicefee + otherfees) as totalservicefee,\n                sum(subremit) as subremit,\n                sum(totremit) as totremit,\n                sum(prevbal) as beginningbalance,\n                sum(balance) as endingbalance\n            from port.portmonth\n            where servicer = 'MRC'\n              and fctrdt = '{mrc_db.fctrdt}';",
       "filter_hints": {
-        "mrc_db.fctrdt": "<resolve before export>"
+        "mrc_db.fctrdt": "factor-date (YYYY-MM-01) for remit cycle, e.g. '2026-05-01'"
       },
-      "notes": "auto-extracted; resolve `{...}` placeholders before export"
+      "notes": "resolve 1 placeholder(s) before export"
     },
     {
-      "logical_name": "mrc_mrc_validation_mrc_service_fee_check_86a6badfe1ed",
-      "source_module": "flow\\remit_validation\\mrc_validation.py",
+      "logical_name": "mrc__mrc_service_fee_check_86a6badfe1ed",
+      "source_module": "flow/remit_validation/mrc_validation.py",
       "source_function": "mrc_service_fee_check",
       "sql": "select\n                r.fctrdt,\n                r.loanid,\n                r.mrc_ln,\n                coalesce(p.dealid, f.dealid) as dealid,\n                r.total_accrued_earned_servicing_fees as servicefee_remit_raw,\n                p.servicefee as servicefee_portmonth,\n                r.total_accrued_earned_servicing_fees - p.servicefee as servicefee_diff\n            from mrc.portmrcremitloanlevelrecap r\n            left join port.portmonth p\n                on r.fctrdt = p.fctrdt\n               and r.loanid = p.loanid\n               and p.servicer = 'MRC'\n            left join port.portfunding f\n                on r.loanid = f.loanid\n            where r.fctrdt = '{mrc_db.fctrdt}';",
       "filter_hints": {
-        "mrc_db.fctrdt": "<resolve before export>"
+        "mrc_db.fctrdt": "factor-date (YYYY-MM-01) for remit cycle, e.g. '2026-05-01'"
       },
-      "notes": "auto-extracted; resolve `{...}` placeholders before export"
+      "notes": "resolve 1 placeholder(s) before export"
     },
     {
-      "logical_name": "mrc_mrc_validation__mrc_adv_info_sql_2634e9f21449",
-      "source_module": "flow\\remit_validation\\mrc_validation.py",
+      "logical_name": "mrc___mrc_adv_info_sql_2634e9f21449",
+      "source_module": "flow/remit_validation/mrc_validation.py",
       "source_function": "_mrc_adv_info_sql",
       "sql": "select\n            'nonrecovcorpadv' as bucket,\n            description,\n            tran_code as transaction_code,\n            sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt\n        from mrc.portmrcremit3rdpartyadvances\n        where fctrdt = '{fctrdt}'\n        group by description, tran_code\n        union all\n        select\n            'recovcorpadv' as bucket,\n            reason as description,\n            tran_code as transaction_code,\n            sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt\n        from mrc.portmrcremitcorpadvances\n        where fctrdt = '{fctrdt}'\n        group by reason, tran_code\n        union all\n        select\n            'escadv' as bucket,\n            cat as description,\n            disbursement_code as transaction_code,\n            sum(total_activity) as amt\n        from mrc.portmrcremitescrowadvances\n        where fctrdt = '{fctrdt}'\n        group by cat, disbursement_code;",
       "filter_hints": {
-        "fctrdt": "<resolve before export>"
+        "fctrdt": "factor-date parameter (YYYY-MM-01), e.g. '2026-05-01'"
       },
-      "notes": "auto-extracted; resolve `{...}` placeholders before export"
+      "notes": "resolve 3 placeholder(s) before export"
+    },
+    {
+      "logical_name": "mrc__get_port_month_data_8c39cb64a924",
+      "source_module": "flow/remit_validation/carrington_db.py",
+      "source_function": "get_port_month_data",
+      "sql": "select * from port.portmonth;",
+      "filter_hints": {},
+      "notes": "auto-extracted"
+    },
+    {
+      "logical_name": "mrc__get_port_month_data_70179c43abdd",
+      "source_module": "flow/remit_validation/carrington_db.py",
+      "source_function": "get_port_month_data",
+      "sql": "select\n                            case\n                                when b.loanid is null then a.servicer\n                                else 'SLS'\n                            end as data_servicer,\n                            a.*\n                        from port.portmonth a\n                            left join\n                        (select loanid from port.portmonth where servicer = 'SLS' and fctrdt = '2024-07-01') b\n                        on a.loanid = b.loanid\n                        where a.servicer = '{service}';",
+      "filter_hints": {
+        "service": "servicer name string, e.g. 'MRC'"
+      },
+      "notes": "resolve 1 placeholder(s) before export"
+    },
+    {
+      "logical_name": "mrc__get_port_funding_data_3e198b3ef484",
+      "source_module": "flow/remit_validation/carrington_db.py",
+      "source_function": "get_port_funding_data",
+      "sql": "select * from port.portfunding;",
+      "filter_hints": {},
+      "notes": "auto-extracted"
+    },
+    {
+      "logical_name": "mrc__get_carrington_daily_data_e9538067d2c4",
+      "source_module": "flow/remit_validation/carrington_db.py",
+      "source_function": "get_carrington_daily_data",
+      "sql": "select * from {table} where snap_shot_date = '{str(query_date)}'",
+      "filter_hints": {
+        "table": "Redshift table name resolved at runtime",
+        "str(query_date)": "as-of date for daily snapshot (string form)"
+      },
+      "notes": "non-MRC (other servicer SQL in shared module); resolve 2 placeholder(s) before export"
+    },
+    {
+      "logical_name": "mrc__get_carrington_remit_data_a237bf8e9a64",
+      "source_module": "flow/remit_validation/carrington_db.py",
+      "source_function": "get_carrington_remit_data",
+      "sql": "select * from {table} where fctrdt = '{str(self.fctrdt)}';",
+      "filter_hints": {
+        "table": "Redshift table name resolved at runtime",
+        "str(self.fctrdt)": "factor-date for this cycle (string form)"
+      },
+      "notes": "non-MRC (other servicer SQL in shared module); resolve 2 placeholder(s) before export"
+    },
+    {
+      "logical_name": "mrc__get_carrington_trans_7774180e8611",
+      "source_module": "flow/remit_validation/carrington_db.py",
+      "source_function": "get_carrington_trans",
+      "sql": "select * from {table} where dataasofdate = '{str(self.fctrdt)}';",
+      "filter_hints": {
+        "table": "Redshift table name resolved at runtime",
+        "str(self.fctrdt)": "factor-date for this cycle (string form)"
+      },
+      "notes": "non-MRC (other servicer SQL in shared module); resolve 2 placeholder(s) before export"
+    },
+    {
+      "logical_name": "mrc__carrington_adv_validation_23a5b42f4295",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "carrington_adv_validation",
+      "sql": "select\np1.loanid, p1.svcloanid as carrington_ln_number, f.dealid\n, p1.escrow_advance_balance  as escrow_advance_prev\n, p2.escrow_advance_balance as escrow_advance_curr\n, p1.nonrecovadvance as nonrecovcorpadv_prev\n, p2.nonrecovadvance as nonrecovcorpadv_curr\n, p1.reccorpadvance as borrower_recoverable_advance_balance_prev --recov\n, p2.reccorpadvance as borrower_recoverable_advance_balance_curr\n, nonrecovcorpadv_curr - nonrecovcorpadv_prev as nonrecovcorpadv_chg_daily\n, borrower_recoverable_advance_balance_curr - borrower_recoverable_advance_balance_prev as recovcorpadv_chg_daily\n, escrow_advance_curr - escrow_advance_prev as escadv_chg_daily\n, coalesce(tmp.corpadvnonrec_chg , 0) as nonrecovcorpadv_chg_remit\n, coalesce(tmp.corpadvrec_chg, 0) as recovcorpadv_chg_remit\n, coalesce(tmp.escrow_chg, 0) as escadv_chg_remit\n, nonrecovcorpadv_chg_remit - nonrecovcorpadv_chg_daily as nonrecovcorpadv_diff\n, e2.int_on_escrow as int_on_escrow\n, recovcorpadv_chg_remit - recovcorpadv_chg_daily as recovcorpadv_diff\n, escadv_chg_remit - escadv_chg_daily as escrowadv_diff_remitvsdaily\n, p1.escrowbalance as escrow_balance_prev\n, p2.escrowbalance as escrow_balance_curr\n, p1.delq_status as delq_status\nfrom\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_pre_month_end' and servicer= 'Carrington') p1\nleft join\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_curr_month_end' and servicer= 'Carrington') p2\non p2.loanid = p1.loanid\nleft join\n(select\nfctrdt\n, loanid\n, sum(case when adv_bucket in ('InvRec', 'ThirdParty') then tran_amount else 0 end) as corpadvnonrec_chg\n, sum(case when adv_bucket in ('Corporate', 'DRM') then tran_amount else 0 end) as corpadvrec_chg\n, sum(case when adv_bucket in ('Escrow') then tran_amount else 0 end) as escrow_chg\nfrom carrington.portcarringtonremitadv p\nwhere fctrdt = 'input_fctrdt'\ngroup by fctrdt, loanid\n) tmp\non p1.loanid  = tmp.loanid\nleft join (select loanid, sum(interest_on_escrow_paid_to_morgagor) as int_on_escrow from carrington.portcarringtonremitfee \n            where fctrdt = 'input_fctrdt' group by loanid) e2\non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\n;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__mysql_carrington_adv_validation_d954ebbfc39b",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "mysql_carrington_adv_validation",
+      "sql": "select\np1.loanid, p1.svcloanid as carrington_ln_number, f.dealid\n, p1.escrow_advance_balance  as escrow_advance_prev\n, p2.escrow_advance_balance as escrow_advance_curr\n, p1.nonrecovadvance as nonrecovcorpadv_prev\n, p2.nonrecovadvance as nonrecovcorpadv_curr\n, p1.reccorpadvance as borrower_recoverable_advance_balance_prev\n, p2.reccorpadvance as borrower_recoverable_advance_balance_curr\n, p2.nonrecovadvance - p1.nonrecovadvance as nonrecovcorpadv_chg_daily\n, p2.reccorpadvance - p1.reccorpadvance as recovcorpadv_chg_daily\n, p2.escrow_advance_balance - p1.escrow_advance_balance as escadv_chg_daily\n, coalesce(tmp.corpadvnonrec_chg , 0) as nonrecovcorpadv_chg_remit\n, coalesce(tmp.corpadvrec_chg, 0) as recovcorpadv_chg_remit\n, coalesce(tmp.escrow_chg, 0) as escadv_chg_remit\n, coalesce(tmp.corpadvnonrec_chg , 0) - (p2.nonrecovadvance - p1.nonrecovadvance) as nonrecovcorpadv_diff\n, e2.int_on_escrow as int_on_escrow\n, coalesce(tmp.corpadvrec_chg, 0) - (p2.reccorpadvance - p1.reccorpadvance) as recovcorpadv_diff\n, coalesce(tmp.escrow_chg, 0) - (p2.escrow_advance_balance - p1.escrow_advance_balance) as escrowadv_diff_remitvsdaily\n, p1.escrowbalance as escrow_balance_prev\n, p2.escrowbalance as escrow_balance_curr\n, p1.delq_status as delq_status\nfrom\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_pre_month_end' and servicer= 'Carrington') p1\nleft join\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_curr_month_end' and servicer= 'Carrington') p2\non p2.loanid = p1.loanid\nleft join\n(select\nfctrdt\n, loanid\n, sum(case when adv_bucket in ('InvRec', 'ThirdParty') then tran_amount else 0 end) as corpadvnonrec_chg\n, sum(case when adv_bucket in ('Corporate', 'DRM') then tran_amount else 0 end) as corpadvrec_chg\n, sum(case when adv_bucket in ('Escrow') then tran_amount else 0 end) as escrow_chg\nfrom carrington.portcarringtonremitadv p\nwhere fctrdt = 'input_fctrdt'\ngroup by fctrdt, loanid\n) tmp\non p1.loanid  = tmp.loanid\nleft join (select loanid, sum(interest_on_escrow_paid_to_morgagor) as int_on_escrow from carrington.portcarringtonremitfee \n            where fctrdt = 'input_fctrdt' group by loanid) e2\non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\n;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__carrington_general_check_d98837793f5b",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "carrington_general_check",
+      "sql": "select\n-- Carrington Remittance\nr.loanid, r.carrington_ln_number, f.dealid\n, r.interest_rate as intrate_remit\n, r.next_due_date as nextduedate_remit\n, r.beginning_balance as begbal_remit\n, r.ending_balance as endbal_remit\n, r.current_regular_pmt_amt as pandi_expected_remit\n, r.principal_payment_actual_prinorcash_received as principal_remit\n, r.gross_interest_payment as interest_remit\n, r.ending_def_prin as deferredupb_remit\n, r.total_upb as totalupb_remit\n, r.beginning_def_prin - r.ending_def_prin as deferredbal_paid_remit\n-- Carrington Daily\n, c.interest_rate as intrate_daily\n, c.nextduedate as nextduedate_daily\n, c.principalbalance as endbal_daily\n--check interest_rate\n, intrate_remit - intrate_daily as intrate_diff_remitvsdaily\n--check nextduedate\n, nextduedate_remit - nextduedate_daily as nextduedate_diff_remitvsdaily\n-- check begbal remitvsdaily\n, begbal_remit - c2.principalbalance as begbal_diff_remitvsdaily\n-- check endbal remitvsdaily\n, endbal_remit - endbal_daily as endbal_diff_remitvsdaily\n-- check upb + deferred upb = total upb\n, endbal_remit + deferredupb_remit - totalupb_remit as principal_diff_remit\n-- check begbal - endbal = principal_remit\n, begbal_remit - endbal_remit + deferredbal_paid_remit - principal_remit as balchg_prin_diff_remit\n-- check pandi\n--, pandi_remit - (principal_remit + interest_remit) as pandi_diff_remit\nfrom\n    carrington.portcarringtonremit r\ninner join\n    port.basic_data_daily_loan_common c\non\n    r.loanid = c.loanid\ninner join\n    port.basic_data_daily_loan_common c2\non\n    r.loanid = c2.loanid\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand c.asofdate = dateadd(day, -1, r.fctrdt)\nand c2.asofdate = 'input_pre_month_end'\n;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__mysql_carrington_general_check_2ee58d8858d7",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "mysql_carrington_general_check",
+      "sql": "select\nr.loanid, r.carrington_ln_number, f.dealid\n, r.interest_rate as intrate_remit\n, r.next_due_date as nextduedate_remit\n, r.beginning_balance as begbal_remit\n, r.ending_balance as endbal_remit\n, r.current_regular_pmt_amt as pandi_expected_remit\n, r.principal_payment_actual_prinorcash_received as principal_remit\n, r.gross_interest_payment as interest_remit\n, r.ending_def_prin as deferredupb_remit\n, r.total_upb as totalupb_remit\n, r.beginning_def_prin - r.ending_def_prin as deferredbal_paid_remit\n, c.interest_rate as intrate_daily\n, c.nextduedate as nextduedate_daily\n, c.principalbalance as endbal_daily\n, r.interest_rate - c.interest_rate as intrate_diff_remitvsdaily\n, r.next_due_date - c.nextduedate as nextduedate_diff_remitvsdaily\n, r.beginning_balance - c2.principalbalance as begbal_diff_remitvsdaily\n, r.ending_balance - c.principalbalance as endbal_diff_remitvsdaily\n, r.ending_balance + r.ending_def_prin - r.total_upb as principal_diff_remit\n, r.beginning_balance - r.ending_balance + (r.beginning_def_prin - r.ending_def_prin) - r.principal_payment_actual_prinorcash_received as balchg_prin_diff_remit\nfrom\n    carrington.portcarringtonremit r\ninner join\n    port.basic_data_daily_loan_common c\non\n    r.loanid = c.loanid\ninner join\n    port.basic_data_daily_loan_common c2\non\n    r.loanid = c2.loanid\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand c.asofdate = DATE_ADD(r.fctrdt, INTERVAL -1 DAY)\nand c2.asofdate = 'input_pre_month_end';",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__newrez_adv_validation_25b912ad05e6",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "newrez_adv_validation",
+      "sql": "select p1.loanid, p1.svcloanid as shellpoint_ln, f.dealid,\np1.delq_status as delq_status\n, coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily\n, coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily\n, escrowadv_curr_daily - escrowadv_prev_daily as escrowadv_chg_daily\n, -1 * coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily\n, -1 * coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily\n, -1 * coalesce(p1.nonrecovadvance, 0) as thirdpartyrecovadv_prev_daily\n, -1 * coalesce(p2.nonrecovadvance, 0) as thirdpartyrecovadv_curr_daily\n, reccorpadvance_prev_daily + thirdpartyrecovadv_prev_daily as totalcorpadv_prev_daily\n, reccorpadvance_curr_daily + thirdpartyrecovadv_curr_daily as  totalcorpadv_curr_daily\n, reccorpadvance_curr_daily - reccorpadvance_prev_daily as reccorpadvance_chg_daily\n, thirdpartyrecovadv_curr_daily - thirdpartyrecovadv_prev_daily as thirdpartyrecovadv_chg_daily\n, totalcorpadv_curr_daily - totalcorpadv_prev_daily as totalcorpadv_chg_daily\n, r.netchange as reccorpadvance_remit\n, n.netchange as nonrecovadvance_remit\n, e.netchange as escadv_remit\n, reccorpadvance_remit + nonrecovadvance_remit as totalcorpadvance_remit\n, escrowadv_chg_daily + escadv_remit as escadv_diff_remitvsdaily\n, thirdpartyrecovadv_chg_daily + nonrecovadvance_remit as nonrecovcorpadv_diff_remitvsdaily\n,  e2.int_on_escrow as int_on_escrow\n, reccorpadvance_chg_daily + reccorpadvance_remit as recovcorpadv_diff_remitvsdaily\n, totalcorpadv_chg_daily + totalcorpadvance_remit as totalcorpadv_diff_remitvsdaily\nfrom port.basic_data_daily_loan_common p1\ninner join\n    port.basic_data_daily_loan_common p2\non\n    p1.loanid = p2.loanid\ninner join\n    newrez.portnewrezremitrecovcorpadvchange r\non\n    p1.loanid = r.loanid\ninner join\n    newrez.portnewrezremitnonrecovcorpadvchange n\non\n    p1.loanid = n.loanid\ninner join\n    newrez.portnewrezremitescadvchange e\non\n    p1.loanid = e.loanid\nleft join \n(select loanid, sum(transactionamt) as int_on_escrow from newrez.portnewrezremitnonrecovcorpadvdetail where fctrdt = 'input_fctrdt' and description = 'Int on Escrow Pmt' group by loanid) e2 \non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand n.fctrdt = r.fctrdt\nand e.fctrdt = r.fctrdt\nand p1.asofdate = 'input_pre_month_end'\nand p2.asofdate = 'input_curr_month_end';",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__mysql_newrez_adv_validation_1f2d2794ff2b",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "mysql_newrez_adv_validation",
+      "sql": "select p1.loanid, p1.svcloanid as shellpoint_ln, f.dealid,\np1.delq_status as delq_status\n, coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily\n, coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily\n, coalesce(p2.escrow_advance_balance, 0) - coalesce(p1.escrow_advance_balance, 0) as escrowadv_chg_daily\n, -1 * coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily\n, -1 * coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily\n, -1 * coalesce(p1.nonrecovadvance, 0) as thirdpartyrecovadv_prev_daily\n, -1 * coalesce(p2.nonrecovadvance, 0) as thirdpartyrecovadv_curr_daily\n, -1 * coalesce(p1.reccorpadvance, 0) -1 * coalesce(p1.nonrecovadvance, 0) as totalcorpadv_prev_daily\n, -1 * coalesce(p2.reccorpadvance, 0) -1 * coalesce(p2.nonrecovadvance, 0) as  totalcorpadv_curr_daily\n, -1 * coalesce(p2.reccorpadvance, 0) + 1 * coalesce(p1.reccorpadvance, 0) as reccorpadvance_chg_daily\n, -1 * coalesce(p2.nonrecovadvance, 0) + 1 * coalesce(p1.nonrecovadvance, 0) as thirdpartyrecovadv_chg_daily\n, (-1 * coalesce(p2.reccorpadvance, 0) -1 * coalesce(p2.nonrecovadvance, 0)) - (-1 * coalesce(p1.reccorpadvance, 0) -1 * coalesce(p1.nonrecovadvance, 0)) as totalcorpadv_chg_daily\n, r.netchange as reccorpadvance_remit\n, n.netchange as nonrecovadvance_remit\n, e.netchange as escadv_remit\n, r.netchange + n.netchange as totalcorpadvance_remit\n, (coalesce(p2.escrow_advance_balance, 0) - coalesce(p1.escrow_advance_balance, 0)) + e.netchange as escadv_diff_remitvsdaily\n, (-1 * coalesce(p2.nonrecovadvance, 0) + 1 * coalesce(p1.nonrecovadvance, 0)) + n.netchange as nonrecovcorpadv_diff_remitvsdaily\n,e2.int_on_escrow as int_on_escrow\n, (-1 * coalesce(p2.reccorpadvance, 0) + 1 * coalesce(p1.reccorpadvance, 0)) + r.netchange as recovcorpadv_diff_remitvsdaily\n, (-1 * coalesce(p2.reccorpadvance, 0) -1 * coalesce(p2.nonrecovadvance, 0)) - (-1 * coalesce(p1.reccorpadvance, 0) -1 * coalesce(p1.nonrecovadvance, 0)) + (r.netchange + n.netchange) as totalcorpadv_diff_remitvsdaily\nfrom port.basic_data_daily_loan_common p1\ninner join\n    port.basic_data_daily_loan_common p2\non\n    p1.loanid = p2.loanid\ninner join\n    newrez.portnewrezremitrecovcorpadvchange r\non\n    p1.loanid = r.loanid\ninner join\n    newrez.portnewrezremitnonrecovcorpadvchange n\non\n    p1.loanid = n.loanid\ninner join\n    newrez.portnewrezremitescadvchange e\non\n    p1.loanid = e.loanid\nleft join (select loanid, sum(transactionamt) as int_on_escrow from newrez.portnewrezremitnonrecovcorpadvdetail where fctrdt = 'input_fctrdt' and description = 'Int on Escrow Pmt' group by loanid) e2\non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand n.fctrdt = r.fctrdt\nand e.fctrdt = r.fctrdt\nand p1.asofdate = 'input_pre_month_end'\nand p2.asofdate = 'input_curr_month_end';",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__newrez_general_check_daba152f80aa",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "newrez_general_check",
+      "sql": "select\n-- from Remittance\nr.loanid, r.shellpoint_ln, f.dealid,\ncase when coalesce(i.principalreceived, 0) != 0 or coalesce(i.interestreceived, 0) != 0 then 'Y' else 'N' end as interim_flag\n, r.net_int_rate as intrate_remit\n, r.actl_beg_prin_bal as begbal_remit\n, r.actl_end_prin_bal as endbal_remit\n, r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount as principal_remit\n, r.actl_net_int as interest_remit\n, principal_remit + interest_remit + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0) as pandi_remit\n, r.ending_non_interest_bearing_deferred_principal_bal  as deferredprincipal_remit\n, r.endingdeferredinterestbalance as deferredint_remit\n-- from Payment\n, p.nextduedate\n, p.principalbalance as endbal_daily\n, p.deferredprincipalbalance as deferredprincipal_daily\n, p.deferredinterestbalance as deferredint_daily\n, p.schedule_pandi_daily as pandiexpected_daily\n, p.principalpaidmtd as principalreceived_daily\n, p.interestpaidmtd as interestreceived_daily\n, p.principalpaidmtd + p.interestpaidmtd as pandireceived_daily\n-- from General\n, p.interest_rate as intrate_daily\n, p.bal_prin_original /((1-(1/(1+intrate_daily/1200)^p.originalterm))/(intrate_daily/1200)) as pandi_calc\n, p.delq_status as delinquency_status_mba\n-- check difference\n, begbal_remit - endbal_remit - principal_remit as prin_bal_diff_remit\n, p2.deferredprincipalbalance - p.deferredprincipalbalance as deferredprincipal_chg_daily\n, intrate_remit - intrate_daily as intrate_diff_remitvsdaily\n, endbal_remit - endbal_daily as endbal_diff_remitvsdaily\n, deferredprincipal_remit - deferredprincipal_daily as deferredprincipal_diff_remitvsdaily\n, deferredint_remit - deferredint_daily as deferredint_diff_remitvsdaily\n, pandi_remit - pandireceived_daily as pandi_diff_remitvsdaily\n, case when p.nextduedate =r.borr_next_pay_due_date then 0 else 1 end as nextduedate_diff_remitvsdaily\n, case when pandiexpected_daily = 0 then null else pandi_remit / pandiexpected_daily end as pandi_paid_times_remit\n, case when pandiexpected_daily = 0 then null else pandireceived_daily / pandiexpected_daily end as pandi_paid_times_daily\n-- will add in the future to check next due date change vs how many payment we receive.\nfrom\n    newrez.portnewrezremitwf r\ninner join\n    port.basic_data_daily_loan_common p\non\n    r.loanid = p.loanid\ninner join\n    port.basic_data_daily_loan_common p2\non\n    r.loanid = p2.loanid\nand r.fctrdt = 'input_fctrdt'\nand p.asofdate = 'input_curr_month_end'\nand p2.asofdate = 'input_pre_month_end'\nleft join\n    port.portinterim i\non\n    r.loanid = i.loanid\nand r.fctrdt = i.fctrdt\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\n;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__mysql_newrez_general_check_ec45cb73105f",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "mysql_newrez_general_check",
+      "sql": "select\n-- from Remittance\nr.loanid, r.shellpoint_ln, f.dealid,\ncase when coalesce(i.principalreceived, 0) != 0 or coalesce(i.interestreceived, 0) != 0 then 'Y' else 'N' end as interim_flag\n, r.net_int_rate as intrate_remit\n, r.actl_beg_prin_bal as begbal_remit\n, r.actl_end_prin_bal as endbal_remit\n, r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount as principal_remit\n, r.actl_net_int as interest_remit\n, (r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount)\n+ r.actl_net_int + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0) as pandi_remit\n, r.ending_non_interest_bearing_deferred_principal_bal  as deferredprincipal_remit\n, r.endingdeferredinterestbalance as deferredint_remit\n-- from Payment\n, p.nextduedate\n, p.principalbalance as endbal_daily\n, p.deferredprincipalbalance as deferredprincipal_daily\n, p.deferredinterestbalance as deferredint_daily\n, p.schedule_pandi_daily as pandiexpected_daily\n, p.principalpaidmtd as principalreceived_daily\n, p.interestpaidmtd as interestreceived_daily\n, p.principalpaidmtd + p.interestpaidmtd as pandireceived_daily\n-- from General\n, p.interest_rate as intrate_daily\n, p.bal_prin_original /((1-(1/POW((1+p.interest_rate/1200), p.originalterm)))/(p.interest_rate/1200)) as pandi_calc\n, p.delq_status as delinquency_status_mba\n-- check difference\n, r.actl_beg_prin_bal - r.actl_end_prin_bal - (r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount) as prin_bal_diff_remit\n, p2.deferredprincipalbalance - p.deferredprincipalbalance as deferredprincipal_chg_daily\n, r.net_int_rate - p.interest_rate as intrate_diff_remitvsdaily\n, r.actl_end_prin_bal - p.principalbalance as endbal_diff_remitvsdaily\n, r.ending_non_interest_bearing_deferred_principal_bal - p.deferredprincipalbalance as deferredprincipal_diff_remitvsdaily\n, r.endingdeferredinterestbalance - p.deferredinterestbalance as deferredint_diff_remitvsdaily\n, ((r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount)\n+ r.actl_net_int + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0)) - (p.principalpaidmtd + p.interestpaidmtd) as pandi_diff_remitvsdaily\n, case when p.nextduedate =r.borr_next_pay_due_date then 0 else 1 end as nextduedate_diff_remitvsdaily\n, case when p.schedule_pandi_daily = 0 then null else ((r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount)\n+ r.actl_net_int + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0)) / p.schedule_pandi_daily end as pandi_paid_times_remit\n, case when p.schedule_pandi_daily = 0 then null else (p.principalpaidmtd + p.interestpaidmtd) / p.schedule_pandi_daily  end as pandi_paid_times_daily\n-- will add in the future to check next due date change vs how many payment we receive.\nfrom\n    newrez.portnewrezremitwf r\ninner join\n    port.basic_data_daily_loan_common p\non\n    r.loanid = p.loanid\ninner join\n    port.basic_data_daily_loan_common p2\non\n    r.loanid = p2.loanid\nand r.fctrdt = 'input_fctrdt'\nand p.asofdate = 'input_curr_month_end'\nand p2.asofdate = 'input_pre_month_end'\nleft join\n    port.portinterim i\non\n    r.loanid = i.loanid\nand r.fctrdt = i.fctrdt\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\n;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__selene_adv_validation_8d5ab353cdc4",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "selene_adv_validation",
+      "sql": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'Selene'\n      and fctrdt = 'input_fctrdt'\n),\np1 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'Selene'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'Selene'\n)\nselect r.loanid,\n       r.svcloanid as selene_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       p1.delq_status as delq_status,\n       coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily,\n       coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily,\n       escrowadv_curr_daily - escrowadv_prev_daily as escrowadv_chg_daily,\n       coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily,\n       coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily,\n       coalesce(p1.nonrecovadvance, 0) as nonrecovcorpadv_prev_daily,\n       coalesce(p2.nonrecovadvance, 0) as nonrecovcorpadv_curr_daily,\n       reccorpadvance_prev_daily + nonrecovcorpadv_prev_daily as totalcorpadv_prev_daily,\n       reccorpadvance_curr_daily + nonrecovcorpadv_curr_daily as totalcorpadv_curr_daily,\n       reccorpadvance_curr_daily - reccorpadvance_prev_daily as reccorpadvance_chg_daily,\n       case\n           when p1.nonrecovadvance is null and p2.nonrecovadvance is null then null\n           else nonrecovcorpadv_curr_daily - nonrecovcorpadv_prev_daily\n           end as nonrecovcorpadv_chg_daily,\n       totalcorpadv_curr_daily - totalcorpadv_prev_daily as totalcorpadv_chg_daily,\n       coalesce(r.corpadvrec_chg, 0) as reccorpadvance_remit,\n       coalesce(r.corpadvnonrec_chg, 0) as nonrecovadvance_remit,\n       coalesce(r.escrowadv_chg, 0) as escadv_remit,\n       coalesce(r.corpadvtotal_chg, coalesce(r.corpadvrec_chg, 0) + coalesce(r.corpadvnonrec_chg, 0)) as totalcorpadvance_remit,\n       escrowadv_chg_daily + escadv_remit as escadv_diff_remitvsdaily,\n       case\n           when nonrecovcorpadv_chg_daily is null then null\n           else nonrecovcorpadv_chg_daily + nonrecovadvance_remit\n           end as nonrecovcorpadv_diff_remitvsdaily,\n       reccorpadvance_chg_daily + reccorpadvance_remit as recovcorpadv_diff_remitvsdaily,\n       case\n           when nonrecovcorpadv_chg_daily is null then null\n           else totalcorpadv_chg_daily + totalcorpadvance_remit\n           end as totalcorpadv_diff_remitvsdaily,\n       coalesce(p1.escrowbalance, 0) as escrow_balance_prev,\n       coalesce(p2.escrowbalance, 0) as escrow_balance_curr\nfrom r\nleft join p1 on r.loanid = p1.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__selene_general_check_4d3d59650ea0",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "selene_general_check",
+      "sql": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'Selene'\n      and fctrdt = 'input_fctrdt'\n),\np as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'Selene'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'Selene'\n)\nselect r.loanid,\n       r.svcloanid as selene_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       r.intrate as intrate_remit,\n       r.nextduedate as nextduedate_remit,\n       r.prevbal as begbal_remit,\n       r.balance as endbal_remit,\n       r.principalreceived as principal_remit,\n       r.interestreceived as interest_remit,\n       r.pandireceived as pandi_remit,\n       r.deferredprin as deferredprincipal_remit,\n       r.deferredint as deferredint_remit,\n       p.nextduedate as nextduedate_daily,\n       p2.principalbalance as begbal_daily,\n       p.principalbalance as endbal_daily,\n       p.deferredprincipalbalance as deferredprincipal_daily,\n       p.deferredinterestbalance as deferredint_daily,\n       p.schedule_pandi_daily as pandiexpected_daily,\n       p.principalpaidmtd as principalreceived_daily,\n       p.interestpaidmtd as interestreceived_daily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)\n           end as pandireceived_daily,\n       p.interest_rate as intrate_daily,\n       p.delq_status as delinquency_status_mba,\n       r.prevbal - r.balance - coalesce(r.principalreceived, 0) as prin_bal_diff_remit,\n       r.prevbal - p2.principalbalance as begbal_diff_remitvsdaily,\n       r.balance - p.principalbalance as endbal_diff_remitvsdaily,\n       coalesce(r.deferredprin, 0) - coalesce(p.deferredprincipalbalance, 0) as deferredprincipal_diff_remitvsdaily,\n       coalesce(r.deferredint, 0) - coalesce(p.deferredinterestbalance, 0) as deferredint_diff_remitvsdaily,\n       r.intrate - p.interest_rate as intrate_diff_remitvsdaily,\n       case when r.nextduedate = p.nextduedate then 0 else 1 end as nextduedate_diff_remitvsdaily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(r.pandireceived, 0) - (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0))\n           end as pandi_diff_remitvsdaily,\n       case\n           when p.delq_status = 'Liquidated' then null\n           else r.pandi - p.schedule_pandi_daily\n           end as pandi_schedule_diff_remitvsdaily,\n       case when coalesce(p.schedule_pandi_daily, 0) = 0 then null else r.pandireceived / p.schedule_pandi_daily end as pandi_paid_times_remit,\n       case\n           when coalesce(p.schedule_pandi_daily, 0) = 0 or (p.principalpaidmtd is null and p.interestpaidmtd is null) then null\n           else (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)) / p.schedule_pandi_daily\n           end as pandi_paid_times_daily\nfrom r\nleft join p on r.loanid = p.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "filter_hints": {},
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__mrc_adv_validation_0a77567c40d9",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "mrc_adv_validation",
+      "sql": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'MRC'\n      and fctrdt = 'input_fctrdt'\n),\np1 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'MRC'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'MRC'\n)\nselect r.loanid,\n       r.svcloanid as mrc_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       p1.delq_status as delq_status,\n       coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily,\n       coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily,\n       case when p1.loanid is null or p2.loanid is null then null else escrowadv_curr_daily - escrowadv_prev_daily end as escrowadv_chg_daily,\n       coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily,\n       coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily,\n       coalesce(p1.nonrecovadvance, 0) as nonrecovcorpadv_prev_daily,\n       coalesce(p2.nonrecovadvance, 0) as nonrecovcorpadv_curr_daily,\n       reccorpadvance_prev_daily + nonrecovcorpadv_prev_daily as totalcorpadv_prev_daily,\n       reccorpadvance_curr_daily + nonrecovcorpadv_curr_daily as totalcorpadv_curr_daily,\n       case when p1.loanid is null or p2.loanid is null then null else reccorpadvance_curr_daily - reccorpadvance_prev_daily end as reccorpadvance_chg_daily,\n       case when p1.loanid is null or p2.loanid is null then null else nonrecovcorpadv_curr_daily - nonrecovcorpadv_prev_daily end as nonrecovcorpadv_chg_daily,\n       case when p1.loanid is null or p2.loanid is null then null else totalcorpadv_curr_daily - totalcorpadv_prev_daily end as totalcorpadv_chg_daily,\n       coalesce(r.corpadvrec_chg, 0) as reccorpadvance_remit,\n       coalesce(r.corpadvnonrec_chg, 0) as nonrecovadvance_remit,\n       coalesce(r.escrowadv_chg, 0) as escadv_remit,\n       coalesce(r.corpadvtotal_chg, coalesce(r.corpadvrec_chg, 0) + coalesce(r.corpadvnonrec_chg, 0)) as totalcorpadvance_remit,\n       escrowadv_chg_daily + escadv_remit as escadv_diff_remitvsdaily,\n       nonrecovcorpadv_chg_daily + nonrecovadvance_remit as nonrecovcorpadv_diff_remitvsdaily,\n       reccorpadvance_chg_daily + reccorpadvance_remit as recovcorpadv_diff_remitvsdaily,\n       totalcorpadv_chg_daily + totalcorpadvance_remit as totalcorpadv_diff_remitvsdaily,\n       coalesce(p1.escrowbalance, 0) as escrow_balance_prev,\n       coalesce(p2.escrowbalance, 0) as escrow_balance_curr\nfrom r\nleft join p1 on r.loanid = p1.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "filter_hints": {},
+      "notes": "module-level template (used via .replace() in caller)"
+    },
+    {
+      "logical_name": "mrc__mrc_general_check_62a675d7e6c6",
+      "source_module": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "source_function": "mrc_general_check",
+      "sql": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'MRC'\n      and fctrdt = 'input_fctrdt'\n),\np as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'MRC'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'MRC'\n)\nselect r.loanid,\n       r.svcloanid as mrc_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       r.intrate as intrate_remit,\n       r.nextduedate as nextduedate_remit,\n       r.prevbal as begbal_remit,\n       r.balance as endbal_remit,\n       r.principalreceived as principal_remit,\n       r.interestreceived as interest_remit,\n       r.pandireceived as pandi_remit,\n       r.deferredprin as deferredprincipal_remit,\n       r.deferredint as deferredint_remit,\n       p.nextduedate as nextduedate_daily,\n       p2.principalbalance as begbal_daily,\n       p.principalbalance as endbal_daily,\n       p.deferredprincipalbalance as deferredprincipal_daily,\n       p.deferredinterestbalance as deferredint_daily,\n       p.schedule_pandi_daily as pandiexpected_daily,\n       p.principalpaidmtd as principalreceived_daily,\n       p.interestpaidmtd as interestreceived_daily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)\n           end as pandireceived_daily,\n       p.interest_rate as intrate_daily,\n       p.delq_status as delinquency_status_mba,\n       r.prevbal - r.balance - coalesce(r.principalreceived, 0) as prin_bal_diff_remit,\n       r.prevbal - p2.principalbalance as begbal_diff_remitvsdaily,\n       r.balance - p.principalbalance as endbal_diff_remitvsdaily,\n       coalesce(r.deferredprin, 0) - coalesce(p.deferredprincipalbalance, 0) as deferredprincipal_diff_remitvsdaily,\n       coalesce(r.deferredint, 0) - coalesce(p.deferredinterestbalance, 0) as deferredint_diff_remitvsdaily,\n       r.intrate - p.interest_rate as intrate_diff_remitvsdaily,\n       case when r.nextduedate = p.nextduedate then 0 else 1 end as nextduedate_diff_remitvsdaily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(r.pandireceived, 0) - (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0))\n           end as pandi_diff_remitvsdaily,\n       coalesce(mc.sched_pandi, r.pandi) - p.schedule_pandi_daily as pandi_schedule_diff_remitvsdaily,\n       case when coalesce(p.schedule_pandi_daily, 0) = 0 then null else r.pandireceived / p.schedule_pandi_daily end as pandi_paid_times_remit,\n       case\n           when coalesce(p.schedule_pandi_daily, 0) = 0 or (p.principalpaidmtd is null and p.interestpaidmtd is null) then null\n           else (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)) / p.schedule_pandi_daily\n           end as pandi_paid_times_daily\nfrom r\nleft join p on r.loanid = p.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.basic_data_monthly_loan_common mc\n    on r.fctrdt = mc.fctrdt\n   and r.loanid = mc.loanid\n   and mc.servicer = 'MRC'\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "filter_hints": {},
+      "notes": "module-level template (used via .replace() in caller)"
+    }
+  ],
+  "hits": [
+    {
+      "file_rel": "flow/remit_validation/mrc_validation.py",
+      "start_line": 12,
+      "end_line": 30,
+      "owner": "mrc_summary_check",
+      "owner_type": "function",
+      "sql_template": "select\n                sum(principalreceived) as principalreceived,\n                sum(interestreceived) as interestreceived,\n                sum(escrowadv_chg) as escrowadv_chg,\n                sum(corpadvrec_chg) as corpadvrec_chg,\n                sum(corpadvnonrec_chg) as corpadvnonrec_chg,\n                sum(corpadvtotal_chg) as corpadvtotal_chg,\n                sum(servicefee) as servicefee,\n                sum(otherfees) as otherfees,\n                sum(servicefee + otherfees) as totalservicefee,\n                sum(subremit) as subremit,\n                sum(totremit) as totremit,\n                sum(prevbal) as beginningbalance,\n                sum(balance) as endingbalance\n            from port.portmonth\n            where servicer = 'MRC'\n              and fctrdt = '{mrc_db.fctrdt}';",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "mrc_db.fctrdt": "factor-date (YYYY-MM-01) for remit cycle, e.g. '2026-05-01'"
+      },
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/mrc_summary_check.parquet",
+      "notes": "resolve 1 placeholder(s) before export",
+      "sha": "e943649b57cd"
+    },
+    {
+      "file_rel": "flow/remit_validation/mrc_validation.py",
+      "start_line": 79,
+      "end_line": 96,
+      "owner": "mrc_service_fee_check",
+      "owner_type": "function",
+      "sql_template": "select\n                r.fctrdt,\n                r.loanid,\n                r.mrc_ln,\n                coalesce(p.dealid, f.dealid) as dealid,\n                r.total_accrued_earned_servicing_fees as servicefee_remit_raw,\n                p.servicefee as servicefee_portmonth,\n                r.total_accrued_earned_servicing_fees - p.servicefee as servicefee_diff\n            from mrc.portmrcremitloanlevelrecap r\n            left join port.portmonth p\n                on r.fctrdt = p.fctrdt\n               and r.loanid = p.loanid\n               and p.servicer = 'MRC'\n            left join port.portfunding f\n                on r.loanid = f.loanid\n            where r.fctrdt = '{mrc_db.fctrdt}';",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "mrc_db.fctrdt": "factor-date (YYYY-MM-01) for remit cycle, e.g. '2026-05-01'"
+      },
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/mrc_service_fee_check.parquet",
+      "notes": "resolve 1 placeholder(s) before export",
+      "sha": "86a6badfe1ed"
+    },
+    {
+      "file_rel": "flow/remit_validation/mrc_validation.py",
+      "start_line": 106,
+      "end_line": 133,
+      "owner": "_mrc_adv_info_sql",
+      "owner_type": "function",
+      "sql_template": "select\n            'nonrecovcorpadv' as bucket,\n            description,\n            tran_code as transaction_code,\n            sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt\n        from mrc.portmrcremit3rdpartyadvances\n        where fctrdt = '{fctrdt}'\n        group by description, tran_code\n        union all\n        select\n            'recovcorpadv' as bucket,\n            reason as description,\n            tran_code as transaction_code,\n            sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt\n        from mrc.portmrcremitcorpadvances\n        where fctrdt = '{fctrdt}'\n        group by reason, tran_code\n        union all\n        select\n            'escadv' as bucket,\n            cat as description,\n            disbursement_code as transaction_code,\n            sum(total_activity) as amt\n        from mrc.portmrcremitescrowadvances\n        where fctrdt = '{fctrdt}'\n        group by cat, disbursement_code;",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "fctrdt": "factor-date parameter (YYYY-MM-01), e.g. '2026-05-01'"
+      },
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/mrc_adv_info_sql.parquet",
+      "notes": "resolve 3 placeholder(s) before export",
+      "sha": "2634e9f21449"
+    },
+    {
+      "file_rel": "flow/remit_validation/carrington_db.py",
+      "start_line": 32,
+      "end_line": 32,
+      "owner": "get_port_month_data",
+      "owner_type": "function",
+      "sql_template": "select * from port.portmonth;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/get_port_month_data.parquet",
+      "notes": "auto-extracted",
+      "sha": "8c39cb64a924"
+    },
+    {
+      "file_rel": "flow/remit_validation/carrington_db.py",
+      "start_line": 35,
+      "end_line": 47,
+      "owner": "get_port_month_data",
+      "owner_type": "function",
+      "sql_template": "select\n                            case\n                                when b.loanid is null then a.servicer\n                                else 'SLS'\n                            end as data_servicer,\n                            a.*\n                        from port.portmonth a\n                            left join\n                        (select loanid from port.portmonth where servicer = 'SLS' and fctrdt = '2024-07-01') b\n                        on a.loanid = b.loanid\n                        where a.servicer = '{service}';",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "service": "servicer name string, e.g. 'MRC'"
+      },
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/get_port_month_data.parquet",
+      "notes": "resolve 1 placeholder(s) before export",
+      "sha": "70179c43abdd"
+    },
+    {
+      "file_rel": "flow/remit_validation/carrington_db.py",
+      "start_line": 72,
+      "end_line": 72,
+      "owner": "get_port_funding_data",
+      "owner_type": "function",
+      "sql_template": "select * from port.portfunding;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/get_port_funding_data.parquet",
+      "notes": "auto-extracted",
+      "sha": "3e198b3ef484"
+    },
+    {
+      "file_rel": "flow/remit_validation/carrington_db.py",
+      "start_line": 107,
+      "end_line": 107,
+      "owner": "get_carrington_daily_data",
+      "owner_type": "function",
+      "sql_template": "select * from {table} where snap_shot_date = '{str(query_date)}'",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "table": "Redshift table name resolved at runtime",
+        "str(query_date)": "as-of date for daily snapshot (string form)"
+      },
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); resolve 2 placeholder(s) before export",
+      "sha": "e9538067d2c4"
+    },
+    {
+      "file_rel": "flow/remit_validation/carrington_db.py",
+      "start_line": 124,
+      "end_line": 124,
+      "owner": "get_carrington_remit_data",
+      "owner_type": "function",
+      "sql_template": "select * from {table} where fctrdt = '{str(self.fctrdt)}';",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "table": "Redshift table name resolved at runtime",
+        "str(self.fctrdt)": "factor-date for this cycle (string form)"
+      },
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); resolve 2 placeholder(s) before export",
+      "sha": "a237bf8e9a64"
+    },
+    {
+      "file_rel": "flow/remit_validation/carrington_db.py",
+      "start_line": 152,
+      "end_line": 152,
+      "owner": "get_carrington_trans",
+      "owner_type": "function",
+      "sql_template": "select * from {table} where dataasofdate = '{str(self.fctrdt)}';",
+      "pattern_type": "f-string",
+      "placeholders": {
+        "table": "Redshift table name resolved at runtime",
+        "str(self.fctrdt)": "factor-date for this cycle (string form)"
+      },
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); resolve 2 placeholder(s) before export",
+      "sha": "7774180e8611"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 2,
+      "end_line": 49,
+      "owner": "carrington_adv_validation",
+      "owner_type": "variable",
+      "sql_template": "select\np1.loanid, p1.svcloanid as carrington_ln_number, f.dealid\n, p1.escrow_advance_balance  as escrow_advance_prev\n, p2.escrow_advance_balance as escrow_advance_curr\n, p1.nonrecovadvance as nonrecovcorpadv_prev\n, p2.nonrecovadvance as nonrecovcorpadv_curr\n, p1.reccorpadvance as borrower_recoverable_advance_balance_prev --recov\n, p2.reccorpadvance as borrower_recoverable_advance_balance_curr\n, nonrecovcorpadv_curr - nonrecovcorpadv_prev as nonrecovcorpadv_chg_daily\n, borrower_recoverable_advance_balance_curr - borrower_recoverable_advance_balance_prev as recovcorpadv_chg_daily\n, escrow_advance_curr - escrow_advance_prev as escadv_chg_daily\n, coalesce(tmp.corpadvnonrec_chg , 0) as nonrecovcorpadv_chg_remit\n, coalesce(tmp.corpadvrec_chg, 0) as recovcorpadv_chg_remit\n, coalesce(tmp.escrow_chg, 0) as escadv_chg_remit\n, nonrecovcorpadv_chg_remit - nonrecovcorpadv_chg_daily as nonrecovcorpadv_diff\n, e2.int_on_escrow as int_on_escrow\n, recovcorpadv_chg_remit - recovcorpadv_chg_daily as recovcorpadv_diff\n, escadv_chg_remit - escadv_chg_daily as escrowadv_diff_remitvsdaily\n, p1.escrowbalance as escrow_balance_prev\n, p2.escrowbalance as escrow_balance_curr\n, p1.delq_status as delq_status\nfrom\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_pre_month_end' and servicer= 'Carrington') p1\nleft join\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_curr_month_end' and servicer= 'Carrington') p2\non p2.loanid = p1.loanid\nleft join\n(select\nfctrdt\n, loanid\n, sum(case when adv_bucket in ('InvRec', 'ThirdParty') then tran_amount else 0 end) as corpadvnonrec_chg\n, sum(case when adv_bucket in ('Corporate', 'DRM') then tran_amount else 0 end) as corpadvrec_chg\n, sum(case when adv_bucket in ('Escrow') then tran_amount else 0 end) as escrow_chg\nfrom carrington.portcarringtonremitadv p\nwhere fctrdt = 'input_fctrdt'\ngroup by fctrdt, loanid\n) tmp\non p1.loanid  = tmp.loanid\nleft join (select loanid, sum(interest_on_escrow_paid_to_morgagor) as int_on_escrow from carrington.portcarringtonremitfee \n            where fctrdt = 'input_fctrdt' group by loanid) e2\non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\n;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "23a5b42f4295"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 52,
+      "end_line": 99,
+      "owner": "mysql_carrington_adv_validation",
+      "owner_type": "variable",
+      "sql_template": "select\np1.loanid, p1.svcloanid as carrington_ln_number, f.dealid\n, p1.escrow_advance_balance  as escrow_advance_prev\n, p2.escrow_advance_balance as escrow_advance_curr\n, p1.nonrecovadvance as nonrecovcorpadv_prev\n, p2.nonrecovadvance as nonrecovcorpadv_curr\n, p1.reccorpadvance as borrower_recoverable_advance_balance_prev\n, p2.reccorpadvance as borrower_recoverable_advance_balance_curr\n, p2.nonrecovadvance - p1.nonrecovadvance as nonrecovcorpadv_chg_daily\n, p2.reccorpadvance - p1.reccorpadvance as recovcorpadv_chg_daily\n, p2.escrow_advance_balance - p1.escrow_advance_balance as escadv_chg_daily\n, coalesce(tmp.corpadvnonrec_chg , 0) as nonrecovcorpadv_chg_remit\n, coalesce(tmp.corpadvrec_chg, 0) as recovcorpadv_chg_remit\n, coalesce(tmp.escrow_chg, 0) as escadv_chg_remit\n, coalesce(tmp.corpadvnonrec_chg , 0) - (p2.nonrecovadvance - p1.nonrecovadvance) as nonrecovcorpadv_diff\n, e2.int_on_escrow as int_on_escrow\n, coalesce(tmp.corpadvrec_chg, 0) - (p2.reccorpadvance - p1.reccorpadvance) as recovcorpadv_diff\n, coalesce(tmp.escrow_chg, 0) - (p2.escrow_advance_balance - p1.escrow_advance_balance) as escrowadv_diff_remitvsdaily\n, p1.escrowbalance as escrow_balance_prev\n, p2.escrowbalance as escrow_balance_curr\n, p1.delq_status as delq_status\nfrom\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_pre_month_end' and servicer= 'Carrington') p1\nleft join\n(select * from port.basic_data_daily_loan_common where asofdate = 'input_curr_month_end' and servicer= 'Carrington') p2\non p2.loanid = p1.loanid\nleft join\n(select\nfctrdt\n, loanid\n, sum(case when adv_bucket in ('InvRec', 'ThirdParty') then tran_amount else 0 end) as corpadvnonrec_chg\n, sum(case when adv_bucket in ('Corporate', 'DRM') then tran_amount else 0 end) as corpadvrec_chg\n, sum(case when adv_bucket in ('Escrow') then tran_amount else 0 end) as escrow_chg\nfrom carrington.portcarringtonremitadv p\nwhere fctrdt = 'input_fctrdt'\ngroup by fctrdt, loanid\n) tmp\non p1.loanid  = tmp.loanid\nleft join (select loanid, sum(interest_on_escrow_paid_to_morgagor) as int_on_escrow from carrington.portcarringtonremitfee \n            where fctrdt = 'input_fctrdt' group by loanid) e2\non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\n;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "d954ebbfc39b"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 103,
+      "end_line": 154,
+      "owner": "carrington_general_check",
+      "owner_type": "variable",
+      "sql_template": "select\n-- Carrington Remittance\nr.loanid, r.carrington_ln_number, f.dealid\n, r.interest_rate as intrate_remit\n, r.next_due_date as nextduedate_remit\n, r.beginning_balance as begbal_remit\n, r.ending_balance as endbal_remit\n, r.current_regular_pmt_amt as pandi_expected_remit\n, r.principal_payment_actual_prinorcash_received as principal_remit\n, r.gross_interest_payment as interest_remit\n, r.ending_def_prin as deferredupb_remit\n, r.total_upb as totalupb_remit\n, r.beginning_def_prin - r.ending_def_prin as deferredbal_paid_remit\n-- Carrington Daily\n, c.interest_rate as intrate_daily\n, c.nextduedate as nextduedate_daily\n, c.principalbalance as endbal_daily\n--check interest_rate\n, intrate_remit - intrate_daily as intrate_diff_remitvsdaily\n--check nextduedate\n, nextduedate_remit - nextduedate_daily as nextduedate_diff_remitvsdaily\n-- check begbal remitvsdaily\n, begbal_remit - c2.principalbalance as begbal_diff_remitvsdaily\n-- check endbal remitvsdaily\n, endbal_remit - endbal_daily as endbal_diff_remitvsdaily\n-- check upb + deferred upb = total upb\n, endbal_remit + deferredupb_remit - totalupb_remit as principal_diff_remit\n-- check begbal - endbal = principal_remit\n, begbal_remit - endbal_remit + deferredbal_paid_remit - principal_remit as balchg_prin_diff_remit\n-- check pandi\n--, pandi_remit - (principal_remit + interest_remit) as pandi_diff_remit\nfrom\n    carrington.portcarringtonremit r\ninner join\n    port.basic_data_daily_loan_common c\non\n    r.loanid = c.loanid\ninner join\n    port.basic_data_daily_loan_common c2\non\n    r.loanid = c2.loanid\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand c.asofdate = dateadd(day, -1, r.fctrdt)\nand c2.asofdate = 'input_pre_month_end'\n;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "d98837793f5b"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 157,
+      "end_line": 197,
+      "owner": "mysql_carrington_general_check",
+      "owner_type": "variable",
+      "sql_template": "select\nr.loanid, r.carrington_ln_number, f.dealid\n, r.interest_rate as intrate_remit\n, r.next_due_date as nextduedate_remit\n, r.beginning_balance as begbal_remit\n, r.ending_balance as endbal_remit\n, r.current_regular_pmt_amt as pandi_expected_remit\n, r.principal_payment_actual_prinorcash_received as principal_remit\n, r.gross_interest_payment as interest_remit\n, r.ending_def_prin as deferredupb_remit\n, r.total_upb as totalupb_remit\n, r.beginning_def_prin - r.ending_def_prin as deferredbal_paid_remit\n, c.interest_rate as intrate_daily\n, c.nextduedate as nextduedate_daily\n, c.principalbalance as endbal_daily\n, r.interest_rate - c.interest_rate as intrate_diff_remitvsdaily\n, r.next_due_date - c.nextduedate as nextduedate_diff_remitvsdaily\n, r.beginning_balance - c2.principalbalance as begbal_diff_remitvsdaily\n, r.ending_balance - c.principalbalance as endbal_diff_remitvsdaily\n, r.ending_balance + r.ending_def_prin - r.total_upb as principal_diff_remit\n, r.beginning_balance - r.ending_balance + (r.beginning_def_prin - r.ending_def_prin) - r.principal_payment_actual_prinorcash_received as balchg_prin_diff_remit\nfrom\n    carrington.portcarringtonremit r\ninner join\n    port.basic_data_daily_loan_common c\non\n    r.loanid = c.loanid\ninner join\n    port.basic_data_daily_loan_common c2\non\n    r.loanid = c2.loanid\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand c.asofdate = DATE_ADD(r.fctrdt, INTERVAL -1 DAY)\nand c2.asofdate = 'input_pre_month_end';",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "2ee58d8858d7"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 200,
+      "end_line": 254,
+      "owner": "newrez_adv_validation",
+      "owner_type": "variable",
+      "sql_template": "select p1.loanid, p1.svcloanid as shellpoint_ln, f.dealid,\np1.delq_status as delq_status\n, coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily\n, coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily\n, escrowadv_curr_daily - escrowadv_prev_daily as escrowadv_chg_daily\n, -1 * coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily\n, -1 * coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily\n, -1 * coalesce(p1.nonrecovadvance, 0) as thirdpartyrecovadv_prev_daily\n, -1 * coalesce(p2.nonrecovadvance, 0) as thirdpartyrecovadv_curr_daily\n, reccorpadvance_prev_daily + thirdpartyrecovadv_prev_daily as totalcorpadv_prev_daily\n, reccorpadvance_curr_daily + thirdpartyrecovadv_curr_daily as  totalcorpadv_curr_daily\n, reccorpadvance_curr_daily - reccorpadvance_prev_daily as reccorpadvance_chg_daily\n, thirdpartyrecovadv_curr_daily - thirdpartyrecovadv_prev_daily as thirdpartyrecovadv_chg_daily\n, totalcorpadv_curr_daily - totalcorpadv_prev_daily as totalcorpadv_chg_daily\n, r.netchange as reccorpadvance_remit\n, n.netchange as nonrecovadvance_remit\n, e.netchange as escadv_remit\n, reccorpadvance_remit + nonrecovadvance_remit as totalcorpadvance_remit\n, escrowadv_chg_daily + escadv_remit as escadv_diff_remitvsdaily\n, thirdpartyrecovadv_chg_daily + nonrecovadvance_remit as nonrecovcorpadv_diff_remitvsdaily\n,  e2.int_on_escrow as int_on_escrow\n, reccorpadvance_chg_daily + reccorpadvance_remit as recovcorpadv_diff_remitvsdaily\n, totalcorpadv_chg_daily + totalcorpadvance_remit as totalcorpadv_diff_remitvsdaily\nfrom port.basic_data_daily_loan_common p1\ninner join\n    port.basic_data_daily_loan_common p2\non\n    p1.loanid = p2.loanid\ninner join\n    newrez.portnewrezremitrecovcorpadvchange r\non\n    p1.loanid = r.loanid\ninner join\n    newrez.portnewrezremitnonrecovcorpadvchange n\non\n    p1.loanid = n.loanid\ninner join\n    newrez.portnewrezremitescadvchange e\non\n    p1.loanid = e.loanid\nleft join \n(select loanid, sum(transactionamt) as int_on_escrow from newrez.portnewrezremitnonrecovcorpadvdetail where fctrdt = 'input_fctrdt' and description = 'Int on Escrow Pmt' group by loanid) e2 \non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand n.fctrdt = r.fctrdt\nand e.fctrdt = r.fctrdt\nand p1.asofdate = 'input_pre_month_end'\nand p2.asofdate = 'input_curr_month_end';",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "25b912ad05e6"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 257,
+      "end_line": 310,
+      "owner": "mysql_newrez_adv_validation",
+      "owner_type": "variable",
+      "sql_template": "select p1.loanid, p1.svcloanid as shellpoint_ln, f.dealid,\np1.delq_status as delq_status\n, coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily\n, coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily\n, coalesce(p2.escrow_advance_balance, 0) - coalesce(p1.escrow_advance_balance, 0) as escrowadv_chg_daily\n, -1 * coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily\n, -1 * coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily\n, -1 * coalesce(p1.nonrecovadvance, 0) as thirdpartyrecovadv_prev_daily\n, -1 * coalesce(p2.nonrecovadvance, 0) as thirdpartyrecovadv_curr_daily\n, -1 * coalesce(p1.reccorpadvance, 0) -1 * coalesce(p1.nonrecovadvance, 0) as totalcorpadv_prev_daily\n, -1 * coalesce(p2.reccorpadvance, 0) -1 * coalesce(p2.nonrecovadvance, 0) as  totalcorpadv_curr_daily\n, -1 * coalesce(p2.reccorpadvance, 0) + 1 * coalesce(p1.reccorpadvance, 0) as reccorpadvance_chg_daily\n, -1 * coalesce(p2.nonrecovadvance, 0) + 1 * coalesce(p1.nonrecovadvance, 0) as thirdpartyrecovadv_chg_daily\n, (-1 * coalesce(p2.reccorpadvance, 0) -1 * coalesce(p2.nonrecovadvance, 0)) - (-1 * coalesce(p1.reccorpadvance, 0) -1 * coalesce(p1.nonrecovadvance, 0)) as totalcorpadv_chg_daily\n, r.netchange as reccorpadvance_remit\n, n.netchange as nonrecovadvance_remit\n, e.netchange as escadv_remit\n, r.netchange + n.netchange as totalcorpadvance_remit\n, (coalesce(p2.escrow_advance_balance, 0) - coalesce(p1.escrow_advance_balance, 0)) + e.netchange as escadv_diff_remitvsdaily\n, (-1 * coalesce(p2.nonrecovadvance, 0) + 1 * coalesce(p1.nonrecovadvance, 0)) + n.netchange as nonrecovcorpadv_diff_remitvsdaily\n,e2.int_on_escrow as int_on_escrow\n, (-1 * coalesce(p2.reccorpadvance, 0) + 1 * coalesce(p1.reccorpadvance, 0)) + r.netchange as recovcorpadv_diff_remitvsdaily\n, (-1 * coalesce(p2.reccorpadvance, 0) -1 * coalesce(p2.nonrecovadvance, 0)) - (-1 * coalesce(p1.reccorpadvance, 0) -1 * coalesce(p1.nonrecovadvance, 0)) + (r.netchange + n.netchange) as totalcorpadv_diff_remitvsdaily\nfrom port.basic_data_daily_loan_common p1\ninner join\n    port.basic_data_daily_loan_common p2\non\n    p1.loanid = p2.loanid\ninner join\n    newrez.portnewrezremitrecovcorpadvchange r\non\n    p1.loanid = r.loanid\ninner join\n    newrez.portnewrezremitnonrecovcorpadvchange n\non\n    p1.loanid = n.loanid\ninner join\n    newrez.portnewrezremitescadvchange e\non\n    p1.loanid = e.loanid\nleft join (select loanid, sum(transactionamt) as int_on_escrow from newrez.portnewrezremitnonrecovcorpadvdetail where fctrdt = 'input_fctrdt' and description = 'Int on Escrow Pmt' group by loanid) e2\non p1.loanid = e2.loanid\nleft join\n    port.portfunding f\non\n    p1.loanid = f.loanid\nwhere\n    r.fctrdt = 'input_fctrdt'\nand n.fctrdt = r.fctrdt\nand e.fctrdt = r.fctrdt\nand p1.asofdate = 'input_pre_month_end'\nand p2.asofdate = 'input_curr_month_end';",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "1f2d2794ff2b"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 313,
+      "end_line": 375,
+      "owner": "newrez_general_check",
+      "owner_type": "variable",
+      "sql_template": "select\n-- from Remittance\nr.loanid, r.shellpoint_ln, f.dealid,\ncase when coalesce(i.principalreceived, 0) != 0 or coalesce(i.interestreceived, 0) != 0 then 'Y' else 'N' end as interim_flag\n, r.net_int_rate as intrate_remit\n, r.actl_beg_prin_bal as begbal_remit\n, r.actl_end_prin_bal as endbal_remit\n, r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount as principal_remit\n, r.actl_net_int as interest_remit\n, principal_remit + interest_remit + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0) as pandi_remit\n, r.ending_non_interest_bearing_deferred_principal_bal  as deferredprincipal_remit\n, r.endingdeferredinterestbalance as deferredint_remit\n-- from Payment\n, p.nextduedate\n, p.principalbalance as endbal_daily\n, p.deferredprincipalbalance as deferredprincipal_daily\n, p.deferredinterestbalance as deferredint_daily\n, p.schedule_pandi_daily as pandiexpected_daily\n, p.principalpaidmtd as principalreceived_daily\n, p.interestpaidmtd as interestreceived_daily\n, p.principalpaidmtd + p.interestpaidmtd as pandireceived_daily\n-- from General\n, p.interest_rate as intrate_daily\n, p.bal_prin_original /((1-(1/(1+intrate_daily/1200)^p.originalterm))/(intrate_daily/1200)) as pandi_calc\n, p.delq_status as delinquency_status_mba\n-- check difference\n, begbal_remit - endbal_remit - principal_remit as prin_bal_diff_remit\n, p2.deferredprincipalbalance - p.deferredprincipalbalance as deferredprincipal_chg_daily\n, intrate_remit - intrate_daily as intrate_diff_remitvsdaily\n, endbal_remit - endbal_daily as endbal_diff_remitvsdaily\n, deferredprincipal_remit - deferredprincipal_daily as deferredprincipal_diff_remitvsdaily\n, deferredint_remit - deferredint_daily as deferredint_diff_remitvsdaily\n, pandi_remit - pandireceived_daily as pandi_diff_remitvsdaily\n, case when p.nextduedate =r.borr_next_pay_due_date then 0 else 1 end as nextduedate_diff_remitvsdaily\n, case when pandiexpected_daily = 0 then null else pandi_remit / pandiexpected_daily end as pandi_paid_times_remit\n, case when pandiexpected_daily = 0 then null else pandireceived_daily / pandiexpected_daily end as pandi_paid_times_daily\n-- will add in the future to check next due date change vs how many payment we receive.\nfrom\n    newrez.portnewrezremitwf r\ninner join\n    port.basic_data_daily_loan_common p\non\n    r.loanid = p.loanid\ninner join\n    port.basic_data_daily_loan_common p2\non\n    r.loanid = p2.loanid\nand r.fctrdt = 'input_fctrdt'\nand p.asofdate = 'input_curr_month_end'\nand p2.asofdate = 'input_pre_month_end'\nleft join\n    port.portinterim i\non\n    r.loanid = i.loanid\nand r.fctrdt = i.fctrdt\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\n;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "daba152f80aa"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 378,
+      "end_line": 447,
+      "owner": "mysql_newrez_general_check",
+      "owner_type": "variable",
+      "sql_template": "select\n-- from Remittance\nr.loanid, r.shellpoint_ln, f.dealid,\ncase when coalesce(i.principalreceived, 0) != 0 or coalesce(i.interestreceived, 0) != 0 then 'Y' else 'N' end as interim_flag\n, r.net_int_rate as intrate_remit\n, r.actl_beg_prin_bal as begbal_remit\n, r.actl_end_prin_bal as endbal_remit\n, r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount as principal_remit\n, r.actl_net_int as interest_remit\n, (r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount)\n+ r.actl_net_int + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0) as pandi_remit\n, r.ending_non_interest_bearing_deferred_principal_bal  as deferredprincipal_remit\n, r.endingdeferredinterestbalance as deferredint_remit\n-- from Payment\n, p.nextduedate\n, p.principalbalance as endbal_daily\n, p.deferredprincipalbalance as deferredprincipal_daily\n, p.deferredinterestbalance as deferredint_daily\n, p.schedule_pandi_daily as pandiexpected_daily\n, p.principalpaidmtd as principalreceived_daily\n, p.interestpaidmtd as interestreceived_daily\n, p.principalpaidmtd + p.interestpaidmtd as pandireceived_daily\n-- from General\n, p.interest_rate as intrate_daily\n, p.bal_prin_original /((1-(1/POW((1+p.interest_rate/1200), p.originalterm)))/(p.interest_rate/1200)) as pandi_calc\n, p.delq_status as delinquency_status_mba\n-- check difference\n, r.actl_beg_prin_bal - r.actl_end_prin_bal - (r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount) as prin_bal_diff_remit\n, p2.deferredprincipalbalance - p.deferredprincipalbalance as deferredprincipal_chg_daily\n, r.net_int_rate - p.interest_rate as intrate_diff_remitvsdaily\n, r.actl_end_prin_bal - p.principalbalance as endbal_diff_remitvsdaily\n, r.ending_non_interest_bearing_deferred_principal_bal - p.deferredprincipalbalance as deferredprincipal_diff_remitvsdaily\n, r.endingdeferredinterestbalance - p.deferredinterestbalance as deferredint_diff_remitvsdaily\n, ((r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount)\n+ r.actl_net_int + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0)) - (p.principalpaidmtd + p.interestpaidmtd) as pandi_diff_remitvsdaily\n, case when p.nextduedate =r.borr_next_pay_due_date then 0 else 1 end as nextduedate_diff_remitvsdaily\n, case when p.schedule_pandi_daily = 0 then null else ((r.actl_prin_amt + r.serv_curt_amt_1 + r.serv_curt_amt_2 + r.serv_curt_amt_3 + r.pif_amt\n+ r.non_interest_bearing_deferred_principal_curt_amt + r.non_interest_bearing_deferred_paid_in_full_amount)\n+ r.actl_net_int + coalesce(i.principalreceived, 0) + coalesce(i.interestreceived, 0)) / p.schedule_pandi_daily end as pandi_paid_times_remit\n, case when p.schedule_pandi_daily = 0 then null else (p.principalpaidmtd + p.interestpaidmtd) / p.schedule_pandi_daily  end as pandi_paid_times_daily\n-- will add in the future to check next due date change vs how many payment we receive.\nfrom\n    newrez.portnewrezremitwf r\ninner join\n    port.basic_data_daily_loan_common p\non\n    r.loanid = p.loanid\ninner join\n    port.basic_data_daily_loan_common p2\non\n    r.loanid = p2.loanid\nand r.fctrdt = 'input_fctrdt'\nand p.asofdate = 'input_curr_month_end'\nand p2.asofdate = 'input_pre_month_end'\nleft join\n    port.portinterim i\non\n    r.loanid = i.loanid\nand r.fctrdt = i.fctrdt\nleft join\n    port.portfunding f\non\n    r.loanid = f.loanid\n;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "ec45cb73105f"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 450,
+      "end_line": 508,
+      "owner": "selene_adv_validation",
+      "owner_type": "variable",
+      "sql_template": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'Selene'\n      and fctrdt = 'input_fctrdt'\n),\np1 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'Selene'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'Selene'\n)\nselect r.loanid,\n       r.svcloanid as selene_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       p1.delq_status as delq_status,\n       coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily,\n       coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily,\n       escrowadv_curr_daily - escrowadv_prev_daily as escrowadv_chg_daily,\n       coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily,\n       coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily,\n       coalesce(p1.nonrecovadvance, 0) as nonrecovcorpadv_prev_daily,\n       coalesce(p2.nonrecovadvance, 0) as nonrecovcorpadv_curr_daily,\n       reccorpadvance_prev_daily + nonrecovcorpadv_prev_daily as totalcorpadv_prev_daily,\n       reccorpadvance_curr_daily + nonrecovcorpadv_curr_daily as totalcorpadv_curr_daily,\n       reccorpadvance_curr_daily - reccorpadvance_prev_daily as reccorpadvance_chg_daily,\n       case\n           when p1.nonrecovadvance is null and p2.nonrecovadvance is null then null\n           else nonrecovcorpadv_curr_daily - nonrecovcorpadv_prev_daily\n           end as nonrecovcorpadv_chg_daily,\n       totalcorpadv_curr_daily - totalcorpadv_prev_daily as totalcorpadv_chg_daily,\n       coalesce(r.corpadvrec_chg, 0) as reccorpadvance_remit,\n       coalesce(r.corpadvnonrec_chg, 0) as nonrecovadvance_remit,\n       coalesce(r.escrowadv_chg, 0) as escadv_remit,\n       coalesce(r.corpadvtotal_chg, coalesce(r.corpadvrec_chg, 0) + coalesce(r.corpadvnonrec_chg, 0)) as totalcorpadvance_remit,\n       escrowadv_chg_daily + escadv_remit as escadv_diff_remitvsdaily,\n       case\n           when nonrecovcorpadv_chg_daily is null then null\n           else nonrecovcorpadv_chg_daily + nonrecovadvance_remit\n           end as nonrecovcorpadv_diff_remitvsdaily,\n       reccorpadvance_chg_daily + reccorpadvance_remit as recovcorpadv_diff_remitvsdaily,\n       case\n           when nonrecovcorpadv_chg_daily is null then null\n           else totalcorpadv_chg_daily + totalcorpadvance_remit\n           end as totalcorpadv_diff_remitvsdaily,\n       coalesce(p1.escrowbalance, 0) as escrow_balance_prev,\n       coalesce(p2.escrowbalance, 0) as escrow_balance_curr\nfrom r\nleft join p1 on r.loanid = p1.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "8d5ab353cdc4"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 511,
+      "end_line": 580,
+      "owner": "selene_general_check",
+      "owner_type": "variable",
+      "sql_template": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'Selene'\n      and fctrdt = 'input_fctrdt'\n),\np as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'Selene'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'Selene'\n)\nselect r.loanid,\n       r.svcloanid as selene_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       r.intrate as intrate_remit,\n       r.nextduedate as nextduedate_remit,\n       r.prevbal as begbal_remit,\n       r.balance as endbal_remit,\n       r.principalreceived as principal_remit,\n       r.interestreceived as interest_remit,\n       r.pandireceived as pandi_remit,\n       r.deferredprin as deferredprincipal_remit,\n       r.deferredint as deferredint_remit,\n       p.nextduedate as nextduedate_daily,\n       p2.principalbalance as begbal_daily,\n       p.principalbalance as endbal_daily,\n       p.deferredprincipalbalance as deferredprincipal_daily,\n       p.deferredinterestbalance as deferredint_daily,\n       p.schedule_pandi_daily as pandiexpected_daily,\n       p.principalpaidmtd as principalreceived_daily,\n       p.interestpaidmtd as interestreceived_daily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)\n           end as pandireceived_daily,\n       p.interest_rate as intrate_daily,\n       p.delq_status as delinquency_status_mba,\n       r.prevbal - r.balance - coalesce(r.principalreceived, 0) as prin_bal_diff_remit,\n       r.prevbal - p2.principalbalance as begbal_diff_remitvsdaily,\n       r.balance - p.principalbalance as endbal_diff_remitvsdaily,\n       coalesce(r.deferredprin, 0) - coalesce(p.deferredprincipalbalance, 0) as deferredprincipal_diff_remitvsdaily,\n       coalesce(r.deferredint, 0) - coalesce(p.deferredinterestbalance, 0) as deferredint_diff_remitvsdaily,\n       r.intrate - p.interest_rate as intrate_diff_remitvsdaily,\n       case when r.nextduedate = p.nextduedate then 0 else 1 end as nextduedate_diff_remitvsdaily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(r.pandireceived, 0) - (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0))\n           end as pandi_diff_remitvsdaily,\n       case\n           when p.delq_status = 'Liquidated' then null\n           else r.pandi - p.schedule_pandi_daily\n           end as pandi_schedule_diff_remitvsdaily,\n       case when coalesce(p.schedule_pandi_daily, 0) = 0 then null else r.pandireceived / p.schedule_pandi_daily end as pandi_paid_times_remit,\n       case\n           when coalesce(p.schedule_pandi_daily, 0) = 0 or (p.principalpaidmtd is null and p.interestpaidmtd is null) then null\n           else (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)) / p.schedule_pandi_daily\n           end as pandi_paid_times_daily\nfrom r\nleft join p on r.loanid = p.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": false,
+      "proposed_frozen_as": "n/a (non-MRC SQL — not frozen for this servicer snapshot)",
+      "notes": "non-MRC (other servicer SQL in shared module); module-level template (used via .replace() in caller)",
+      "sha": "4d3d59650ea0"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 583,
+      "end_line": 632,
+      "owner": "mrc_adv_validation",
+      "owner_type": "variable",
+      "sql_template": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'MRC'\n      and fctrdt = 'input_fctrdt'\n),\np1 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'MRC'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'MRC'\n)\nselect r.loanid,\n       r.svcloanid as mrc_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       p1.delq_status as delq_status,\n       coalesce(p1.escrow_advance_balance, 0) as escrowadv_prev_daily,\n       coalesce(p2.escrow_advance_balance, 0) as escrowadv_curr_daily,\n       case when p1.loanid is null or p2.loanid is null then null else escrowadv_curr_daily - escrowadv_prev_daily end as escrowadv_chg_daily,\n       coalesce(p1.reccorpadvance, 0) as reccorpadvance_prev_daily,\n       coalesce(p2.reccorpadvance, 0) as reccorpadvance_curr_daily,\n       coalesce(p1.nonrecovadvance, 0) as nonrecovcorpadv_prev_daily,\n       coalesce(p2.nonrecovadvance, 0) as nonrecovcorpadv_curr_daily,\n       reccorpadvance_prev_daily + nonrecovcorpadv_prev_daily as totalcorpadv_prev_daily,\n       reccorpadvance_curr_daily + nonrecovcorpadv_curr_daily as totalcorpadv_curr_daily,\n       case when p1.loanid is null or p2.loanid is null then null else reccorpadvance_curr_daily - reccorpadvance_prev_daily end as reccorpadvance_chg_daily,\n       case when p1.loanid is null or p2.loanid is null then null else nonrecovcorpadv_curr_daily - nonrecovcorpadv_prev_daily end as nonrecovcorpadv_chg_daily,\n       case when p1.loanid is null or p2.loanid is null then null else totalcorpadv_curr_daily - totalcorpadv_prev_daily end as totalcorpadv_chg_daily,\n       coalesce(r.corpadvrec_chg, 0) as reccorpadvance_remit,\n       coalesce(r.corpadvnonrec_chg, 0) as nonrecovadvance_remit,\n       coalesce(r.escrowadv_chg, 0) as escadv_remit,\n       coalesce(r.corpadvtotal_chg, coalesce(r.corpadvrec_chg, 0) + coalesce(r.corpadvnonrec_chg, 0)) as totalcorpadvance_remit,\n       escrowadv_chg_daily + escadv_remit as escadv_diff_remitvsdaily,\n       nonrecovcorpadv_chg_daily + nonrecovadvance_remit as nonrecovcorpadv_diff_remitvsdaily,\n       reccorpadvance_chg_daily + reccorpadvance_remit as recovcorpadv_diff_remitvsdaily,\n       totalcorpadv_chg_daily + totalcorpadvance_remit as totalcorpadv_diff_remitvsdaily,\n       coalesce(p1.escrowbalance, 0) as escrow_balance_prev,\n       coalesce(p2.escrowbalance, 0) as escrow_balance_curr\nfrom r\nleft join p1 on r.loanid = p1.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/mrc_adv_validation.parquet",
+      "notes": "module-level template (used via .replace() in caller)",
+      "sha": "0a77567c40d9"
+    },
+    {
+      "file_rel": "flow/remit_validation/servicer_validation_with_portdaily.py",
+      "start_line": 635,
+      "end_line": 705,
+      "owner": "mrc_general_check",
+      "owner_type": "variable",
+      "sql_template": "with r as (\n    select *\n    from port.portmonth\n    where servicer = 'MRC'\n      and fctrdt = 'input_fctrdt'\n),\np as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_curr_month_end'\n      and servicer = 'MRC'\n),\np2 as (\n    select *\n    from port.basic_data_daily_loan_common\n    where asofdate = 'input_pre_month_end'\n      and servicer = 'MRC'\n)\nselect r.loanid,\n       r.svcloanid as mrc_ln,\n       coalesce(r.dealid, f.dealid) as dealid,\n       r.intrate as intrate_remit,\n       r.nextduedate as nextduedate_remit,\n       r.prevbal as begbal_remit,\n       r.balance as endbal_remit,\n       r.principalreceived as principal_remit,\n       r.interestreceived as interest_remit,\n       r.pandireceived as pandi_remit,\n       r.deferredprin as deferredprincipal_remit,\n       r.deferredint as deferredint_remit,\n       p.nextduedate as nextduedate_daily,\n       p2.principalbalance as begbal_daily,\n       p.principalbalance as endbal_daily,\n       p.deferredprincipalbalance as deferredprincipal_daily,\n       p.deferredinterestbalance as deferredint_daily,\n       p.schedule_pandi_daily as pandiexpected_daily,\n       p.principalpaidmtd as principalreceived_daily,\n       p.interestpaidmtd as interestreceived_daily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)\n           end as pandireceived_daily,\n       p.interest_rate as intrate_daily,\n       p.delq_status as delinquency_status_mba,\n       r.prevbal - r.balance - coalesce(r.principalreceived, 0) as prin_bal_diff_remit,\n       r.prevbal - p2.principalbalance as begbal_diff_remitvsdaily,\n       r.balance - p.principalbalance as endbal_diff_remitvsdaily,\n       coalesce(r.deferredprin, 0) - coalesce(p.deferredprincipalbalance, 0) as deferredprincipal_diff_remitvsdaily,\n       coalesce(r.deferredint, 0) - coalesce(p.deferredinterestbalance, 0) as deferredint_diff_remitvsdaily,\n       r.intrate - p.interest_rate as intrate_diff_remitvsdaily,\n       case when r.nextduedate = p.nextduedate then 0 else 1 end as nextduedate_diff_remitvsdaily,\n       case\n           when p.principalpaidmtd is null and p.interestpaidmtd is null then null\n           else coalesce(r.pandireceived, 0) - (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0))\n           end as pandi_diff_remitvsdaily,\n       coalesce(mc.sched_pandi, r.pandi) - p.schedule_pandi_daily as pandi_schedule_diff_remitvsdaily,\n       case when coalesce(p.schedule_pandi_daily, 0) = 0 then null else r.pandireceived / p.schedule_pandi_daily end as pandi_paid_times_remit,\n       case\n           when coalesce(p.schedule_pandi_daily, 0) = 0 or (p.principalpaidmtd is null and p.interestpaidmtd is null) then null\n           else (coalesce(p.principalpaidmtd, 0) + coalesce(p.interestpaidmtd, 0)) / p.schedule_pandi_daily\n           end as pandi_paid_times_daily\nfrom r\nleft join p on r.loanid = p.loanid\nleft join p2 on r.loanid = p2.loanid\nleft join port.basic_data_monthly_loan_common mc\n    on r.fctrdt = mc.fctrdt\n   and r.loanid = mc.loanid\n   and mc.servicer = 'MRC'\nleft join port.portfunding f on r.loanid = f.loanid;",
+      "pattern_type": "f-string-noexpr",
+      "placeholders": {},
+      "mrc_relevant": true,
+      "proposed_frozen_as": "baselines/mrc/2026-04-30/input_snapshots/parquet/mrc_general_check.parquet",
+      "notes": "module-level template (used via .replace() in caller)",
+      "sha": "62a675d7e6c6"
     }
   ]
 }
