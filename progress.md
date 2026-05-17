@@ -16,14 +16,25 @@
 
 ## Current stage
 
-**Stage 1 — MRC reverse-engineering documentation (pure prose, no new code).**
-Plan: `plan.md` v9.1. Status registry: `docs/_status/servicers-registry.{zh,en}.md`.
+**Stage 2 — design pass (in parallel with closing G2 + G3 baseline gates).**
+Stage 1 G1 sign-off recorded 2026-05-17 (provisional, iterative refinement
+allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
+(Stage 2 Readiness Assessment). Status registry: `docs/_status/servicers-registry.{zh,en}.md`.
+
+**Active gates**
+- ✅ G1 closed — `stage1-mrc-review` done (provisional sign-off, see `decisions.md` 2026-05-17 entry)
+- ⏸ **G2a** open — `mrc-snapshot` (export Redshift inputs to local Parquet/CSV under `baselines/mrc/2026-04-30/input_snapshots/`; needs user with Redshift access). **Redefined 2026-05-17**: G2 no longer means "freeze Redshift"; it means freeze the **input dataset**. See `decisions.md` 2026-05-17 entry + session `plan.md` § 4.2.
+- ⏸ **G2b** open — `mrc-source-baseline` + `mrc-gold` (run unmodified legacy MRC code against frozen snapshot via Parquet shim; produce baseline XLSX + manifest; cross-check vs LearningLog gold XLSX). Agent-driven once G2a lands.
+- ⏸ G3 open — `stage1-mrc-baseline-verify` (V1–V12 against physical XLSX from G2b)
+
+**Open in parallel right now (design tier, 6 todos `pending`)**: `stage2-mrc-feature-list`, `stage2-mrc-srs`, `stage2-mrc-data-model`, `stage2-mrc-ui-design`, `stage2-mrc-dev-plan`, `stage2-mrc-extensibility-spec`.
+**Blocked on G2 + G3 + extensibility-spec (impl tier, 7 todos)**: `stage2-mrc-ingestion`, `stage2-mrc-engine`, `stage2-mrc-xlsx-renderer`, `stage2-mrc-cell-identity-harness`, `stage2-mrc-api`, `stage2-mrc-ui-impl`, `stage2-mrc-acceptance`.
 
 ### Servicer status matrix (mirror of `docs/_status/servicers-registry.*`)
 
 | Servicer | Sheets | Stage 1 doc | Stage 2 system |
 |---|---|---|---|
-| MRC | 5 | 🚧 in progress | ⏳ pending Stage 1 review |
+| MRC | 5 | ✅ done (provisional, iterative refinement allowed per AGENTS § 6.11) | 🚧 design pass started; impl blocked on G2 + G3 |
 | Carrington | 6 | ✅ done (archived under `_archived/pre-mrc-pivot/`) | ⛔ not started |
 | Shellpoint | 5 | ✅ done (archived) | ⛔ not started |
 | Arvest | 4 | ⏳ placeholder | ⛔ not started |
@@ -48,11 +59,12 @@ Plan: `plan.md` v9.1. Status registry: `docs/_status/servicers-registry.{zh,en}.
 | `stage1-mrc-sheets` | ✅ done | `docs/mrc/sheets.{zh,en}.md` | `test_reports/stage1-mrc-sheets_2026-05-17.md` |
 | `stage1-mrc-fields` | ✅ done | `docs/mrc/fields.{zh,en}.md` | `test_reports/stage1-mrc-fields_2026-05-17.md` |
 | `stage1-mrc-rules` | ✅ done | `docs/mrc/rules.{zh,en}.md` | `test_reports/stage1-mrc-rules_2026-05-17.md` |
-| `stage1-mrc-baseline` | ⏳ pending (next) | `docs/mrc/baseline.{zh,en}.md` + `baselines/mrc/<remit_date>/validation_report.xlsx` | — |
-| `stage1-mrc-review` | ⏳ pending (gate) | (user action) | — |
+| `stage1-mrc-baseline` | ✅ done | `docs/mrc/1.6-baseline.{zh,en}.md` + `baselines/mrc/2026-04-30/` placeholder | `test_reports/stage1-mrc-baseline_2026-05-17.md` |
+| `stage1-mrc-review` | ✅ done (G1, provisional sign-off 2026-05-17) | `decisions.md` 2026-05-17 entry + `AGENTS.md` § 6.11 living-docs rule | — |
+| `stage1-mrc-baseline-verify` | ⏳ blocked on G2 (G3 owner) | upgrade V1–V12 in 1.6 § 9 to `[CONFIRMED]` against physical XLSX | — |
 | `stage1-arvest` / `-cc5` / `-selene` / `-sls` / `-scattered` / `-dataflow` / `-review` | 🕓 pending-deferred (placeholder only) | `docs/<servicer>/_pending.{zh,en}.md` stubs | — |
 
-Stage 2 todos: 12 new `stage2-mrc-*` (all `blocked` on `stage1-mrc-review`), plus 9 generic v8 `stage2-*` now `pending-deferred` (superseded).
+Stage 2 todos: 12 original `stage2-mrc-*` + 1 new `stage2-mrc-extensibility-spec`. Design tier (6) now `pending`; impl tier (7) blocked on G2 + G3 + extensibility-spec. Plus 9 generic v8 `stage2-*` `pending-deferred` (superseded).
 
 ---
 

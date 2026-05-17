@@ -1,0 +1,38 @@
+{
+  "manifest_version": "1.0",
+  "servicer": "mrc",
+  "remit_date": "2026-04-30",
+  "legacy_root": "C:\\Users\\jli\\MyData\\Copilot\\PrefectFlow",
+  "entries": [
+    {
+      "logical_name": "mrc_mrc_validation_mrc_summary_check_e943649b57cd",
+      "source_module": "flow\\remit_validation\\mrc_validation.py",
+      "source_function": "mrc_summary_check",
+      "sql": "select\n                sum(principalreceived) as principalreceived,\n                sum(interestreceived) as interestreceived,\n                sum(escrowadv_chg) as escrowadv_chg,\n                sum(corpadvrec_chg) as corpadvrec_chg,\n                sum(corpadvnonrec_chg) as corpadvnonrec_chg,\n                sum(corpadvtotal_chg) as corpadvtotal_chg,\n                sum(servicefee) as servicefee,\n                sum(otherfees) as otherfees,\n                sum(servicefee + otherfees) as totalservicefee,\n                sum(subremit) as subremit,\n                sum(totremit) as totremit,\n                sum(prevbal) as beginningbalance,\n                sum(balance) as endingbalance\n            from port.portmonth\n            where servicer = 'MRC'\n              and fctrdt = '{mrc_db.fctrdt}';",
+      "filter_hints": {
+        "mrc_db.fctrdt": "<resolve before export>"
+      },
+      "notes": "auto-extracted; resolve `{...}` placeholders before export"
+    },
+    {
+      "logical_name": "mrc_mrc_validation_mrc_service_fee_check_86a6badfe1ed",
+      "source_module": "flow\\remit_validation\\mrc_validation.py",
+      "source_function": "mrc_service_fee_check",
+      "sql": "select\n                r.fctrdt,\n                r.loanid,\n                r.mrc_ln,\n                coalesce(p.dealid, f.dealid) as dealid,\n                r.total_accrued_earned_servicing_fees as servicefee_remit_raw,\n                p.servicefee as servicefee_portmonth,\n                r.total_accrued_earned_servicing_fees - p.servicefee as servicefee_diff\n            from mrc.portmrcremitloanlevelrecap r\n            left join port.portmonth p\n                on r.fctrdt = p.fctrdt\n               and r.loanid = p.loanid\n               and p.servicer = 'MRC'\n            left join port.portfunding f\n                on r.loanid = f.loanid\n            where r.fctrdt = '{mrc_db.fctrdt}';",
+      "filter_hints": {
+        "mrc_db.fctrdt": "<resolve before export>"
+      },
+      "notes": "auto-extracted; resolve `{...}` placeholders before export"
+    },
+    {
+      "logical_name": "mrc_mrc_validation__mrc_adv_info_sql_2634e9f21449",
+      "source_module": "flow\\remit_validation\\mrc_validation.py",
+      "source_function": "_mrc_adv_info_sql",
+      "sql": "select\n            'nonrecovcorpadv' as bucket,\n            description,\n            tran_code as transaction_code,\n            sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt\n        from mrc.portmrcremit3rdpartyadvances\n        where fctrdt = '{fctrdt}'\n        group by description, tran_code\n        union all\n        select\n            'recovcorpadv' as bucket,\n            reason as description,\n            tran_code as transaction_code,\n            sum(coalesce(advances, 0) + coalesce(recoveries, 0)) as amt\n        from mrc.portmrcremitcorpadvances\n        where fctrdt = '{fctrdt}'\n        group by reason, tran_code\n        union all\n        select\n            'escadv' as bucket,\n            cat as description,\n            disbursement_code as transaction_code,\n            sum(total_activity) as amt\n        from mrc.portmrcremitescrowadvances\n        where fctrdt = '{fctrdt}'\n        group by cat, disbursement_code;",
+      "filter_hints": {
+        "fctrdt": "<resolve before export>"
+      },
+      "notes": "auto-extracted; resolve `{...}` placeholders before export"
+    }
+  ]
+}

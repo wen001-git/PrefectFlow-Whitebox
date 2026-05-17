@@ -283,6 +283,47 @@ legend rule still apply to every diagram introduced under § 6.10.
 textual explanation for a diagram, is a **P0 failure** in the
 end-of-stage check and blocks marking the stage `done`.
 
+## 6.11 Living Stage 1 docs + 3-tier behavior marker (mandatory)
+
+User decision 2026-05-17 (G1 sign-off): MRC Stage 1 chapters
+(`docs/mrc/1.0-toc → 1.6-baseline.{zh,en}.md`) are **provisionally
+approved with iterative refinement allowed**. Stage 2 work proceeds in
+parallel.
+
+**Stage 1 docs are LIVING, not frozen.** When the user — or any Stage 2
+investigation — discovers missing logic, incorrect assumptions,
+undocumented edge cases, unclear business semantics, or validation
+inconsistencies, the relevant Stage 1 chapter is updated **in place** and:
+
+1. an entry is appended to the chapter's "Revision history" table (bump
+   version, list the change);
+2. a one-line entry is appended to `decisions.md` linking the change to
+   its driver (user prompt / Stage 2 finding / external source);
+3. a refinement test report is added under `test_reports/` mirroring the
+   convention `<chapter-or-todo-id>_<YYYY-MM-DD>.md`;
+4. the full test matrix is re-run (`tools/stage_doc_checks.py`,
+   `pytest -q`, `mkdocs build --strict`) and results recorded.
+
+**3-tier behavior marker** — every behavior assertion in the Stage 1
+chapters must carry exactly one of these tier tags so readers can
+distinguish epistemic status at a glance:
+
+| Tier | Tag | Meaning |
+|---|---|---|
+| 1 — Verified | `[FROM-CODE]` (existing) or new `[CONFIRMED]` | Reverse-engineered from source code with line-range citation **and** corroborated against the physical baseline XLSX (V1–V12 sweep) |
+| 2 — Inferred | `[FROM-CODE]` (without physical confirmation) or `[VERIFY]` | Reverse-engineered from source code only; no physical-artefact corroboration yet |
+| 3 — Newly discovered | `[FOUND-DURING-STAGE2]` (new) | Surfaced after G1 sign-off while building Stage 2 (engine, renderer, harness, UI); must include date, finder, and reference to the Stage 2 todo or trace that surfaced it |
+
+When a tier-2 `[VERIFY]` is upgraded to tier 1, update both the tag and
+the chapter revision history. When a tier-3 `[FOUND-DURING-STAGE2]` is
+added, also append to `decisions.md` so it does not silently drift back
+into the "always-known" pile.
+
+**Testing**: a Stage 1 chapter without per-assertion tier tags, or with a
+contradiction between two tier-1 assertions, is a **P1 issue** flagged
+during the end-of-stage check; it does not block Stage 2 progress but
+must be reconciled in the next refinement pass.
+
 ---
 
 ## 7. Sibling / related repos

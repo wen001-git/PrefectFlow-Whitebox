@@ -37,3 +37,8 @@ diff_report*.json
 .env
 .env.*
 !.env.example
+
+# G2a snapshot outputs (Parquet via Git LFS once configured; SQL + manifest tracked separately)
+baselines/**/input_snapshots/parquet/
+baselines/**/input_snapshots/csv/
+
