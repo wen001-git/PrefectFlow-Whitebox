@@ -30,6 +30,9 @@ PAIRS = [
     ("dataflow/_pending.zh.md", "dataflow/_pending.en.md"),
     # Stage 2 design docs
     ("stage2/6.0-ui-architecture.zh.md", "stage2/6.0-ui-architecture.en.md"),
+    ("stage2/7.0-module-boundaries.zh.md", "stage2/7.0-module-boundaries.en.md"),
+    ("stage2/8.0-servicer-onboarding.zh.md", "stage2/8.0-servicer-onboarding.en.md"),
+    ("stage2/9.0-dev-plan.zh.md", "stage2/9.0-dev-plan.en.md"),
     # archived v8 chapters (kept under check so their alignment/citations don't bit-rot)
     ("_archived/pre-mrc-pivot/toc.zh.md", "_archived/pre-mrc-pivot/toc.en.md"),
     ("_archived/pre-mrc-pivot/overall-flow.zh.md", "_archived/pre-mrc-pivot/overall-flow.en.md"),
