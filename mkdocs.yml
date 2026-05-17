@@ -90,6 +90,8 @@ nav:
           - 1.4 Fields: mrc/1.4-fields.md
           - 1.5 Rules: mrc/1.5-rules.md
           - 1.6 Baseline: mrc/1.6-baseline.md
+  - Stage 2 Design:
+      - UI Architecture: stage2/6.0-ui-architecture.md
   - Pending servicers:
       - Arvest: arvest/_pending.md
       - CC5: cc5/_pending.md

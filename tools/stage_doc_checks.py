@@ -26,6 +26,8 @@ PAIRS = [
     ("sls/_pending.zh.md", "sls/_pending.en.md"),
     ("scattered/_pending.zh.md", "scattered/_pending.en.md"),
     ("dataflow/_pending.zh.md", "dataflow/_pending.en.md"),
+    # Stage 2 design docs
+    ("stage2/6.0-ui-architecture.zh.md", "stage2/6.0-ui-architecture.en.md"),
     # archived v8 chapters (kept under check so their alignment/citations don't bit-rot)
     ("_archived/pre-mrc-pivot/toc.zh.md", "_archived/pre-mrc-pivot/toc.en.md"),
     ("_archived/pre-mrc-pivot/overall-flow.zh.md", "_archived/pre-mrc-pivot/overall-flow.en.md"),
