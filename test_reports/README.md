@@ -11,6 +11,7 @@
 
 | 日期 / Date | Stage todo-id | 报告 / Report | 结论 / Verdict |
 |---|---|---|---|
+| 2026-05-17 | stage2-mrc-srs (B2 SRS bilingual) | [stage2-mrc-srs_2026-05-17.md](stage2-mrc-srs_2026-05-17.md) | ✅ PASS |
 | 2026-05-17 | stage1-mrc-rules | [stage1-mrc-rules_2026-05-17.md](stage1-mrc-rules_2026-05-17.md) | ✅ PASS |
 | 2026-05-17 | stage1-mrc-fields | [stage1-mrc-fields_2026-05-17.md](stage1-mrc-fields_2026-05-17.md) | ✅ PASS |
 | 2026-05-17 | stage1-mrc-sheets | [stage1-mrc-sheets_2026-05-17.md](stage1-mrc-sheets_2026-05-17.md) | ✅ PASS |
