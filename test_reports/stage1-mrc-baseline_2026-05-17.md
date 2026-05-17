@@ -39,8 +39,8 @@ acceptance — they must all be upgraded to `[CONFIRMED]` once
 | `docs/mrc/baseline.en.md` | created, 25.5 KB, 41 headings (ALIGN OK) |
 | `baselines/.gitkeep` + `baselines/README.md` | created — explains folder layout, links to chapter 1.6 |
 | `baselines/mrc/2026-04-30/.gitkeep` | created — placeholder, awaits physical XLSX |
-| `mkdocs.yml` | added `1.6 Baseline: mrc/baseline.md` nav entry under Servicers → MRC |
-| `tools/stage_doc_checks.py` | added `("mrc/baseline.zh.md", "mrc/baseline.en.md")` to PAIRS |
+| `mkdocs.yml` | added `1.6 Baseline: mrc/1.6-baseline.md` nav entry under Servicers → MRC |
+| `tools/stage_doc_checks.py` | added `("mrc/1.6-baseline.zh.md", "mrc/1.6-baseline.en.md")` to PAIRS |
 
 ## Chapter structure (matches existing MRC docs)
 
@@ -60,7 +60,7 @@ acceptance — they must all be upgraded to `[CONFIRMED]` once
 
 | Check | Result |
 |---|---|
-| `python tools/stage_doc_checks.py` | **18/18 ALIGN OK** (added pair: `mrc/baseline.zh.md` vs `mrc/baseline.en.md`, 41 headings each) + **734 citations PASS** (up from 698 — 36 new source-range cites in chapter 1.6) |
+| `python tools/stage_doc_checks.py` | **18/18 ALIGN OK** (added pair: `mrc/1.6-baseline.zh.md` vs `mrc/1.6-baseline.en.md`, 41 headings each) + **734 citations PASS** (up from 698 — 36 new source-range cites in chapter 1.6) |
 | `pytest -q` | **14 passed in 2.26s** |
 | `mkdocs build --strict` | No content warnings (only pre-existing Material framework banner) |
 | `mkdocs.yml` nav | new entry visible under Servicers → MRC → 1.6 Baseline |

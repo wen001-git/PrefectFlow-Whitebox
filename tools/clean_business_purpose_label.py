@@ -38,10 +38,10 @@ def clean(path: Path) -> int:
 
 def main():
     for p in [
-        DOCS / "sheets.zh.md",
-        DOCS / "sheets.en.md",
-        DOCS / "fields.zh.md",
-        DOCS / "fields.en.md",
+        DOCS / "1.3-sheets.zh.md",
+        DOCS / "1.3-sheets.en.md",
+        DOCS / "1.4-fields.zh.md",
+        DOCS / "1.4-fields.en.md",
     ]:
         n = clean(p)
         print(f"{p.relative_to(ROOT)}: stripped {n} duplicate label(s)")

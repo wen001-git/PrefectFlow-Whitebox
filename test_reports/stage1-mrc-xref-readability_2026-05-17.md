@@ -16,7 +16,7 @@ contains three elements:
 2. Full chapter title — bilingual where appropriate (`Field Definitions` /
    `字段定义`)
 3. Markdown filename matching the current document's language
-   (`fields.zh.md` in ZH docs, `fields.en.md` in EN docs)
+   (`1.4-fields.zh.md` in ZH docs, `1.4-fields.en.md` in EN docs)
 
 Touched files (per user-confirmed scope):
 
@@ -54,10 +54,10 @@ Untouched (explicit out-of-scope):
   skipped since § 4 + § 9 of TOC already serve the same role).
 - **Inline-citation rewrite** — ~280 ref-sites converted from bare numeric
   to three-element form. Examples:
-  - ZH: `第 1.4 章` → `1.4 字段定义 (fields.zh.md)`
-  - ZH: `1.5 § 10 政策 5` → `1.5 验证规则 (rules.zh.md) § 10 政策 5`
-  - EN: `chapter 1.3` → `1.3 Sheet Rendering Layer (sheets.en.md)`
-  - EN: `see 1.1` → `see 1.1 Raw Data Layer (rawdata.en.md)`
+  - ZH: `第 1.4 章` → `1.4 字段定义 (1.4-fields.zh.md)`
+  - ZH: `1.5 § 10 政策 5` → `1.5 验证规则 (1.5-rules.zh.md) § 10 政策 5`
+  - EN: `chapter 1.3` → `1.3 Sheet Rendering Layer (1.3-sheets.en.md)`
+  - EN: `see 1.1` → `see 1.1 Raw Data Layer (1.1-rawdata.en.md)`
 - Self-references (same-document `§ 4.1`) intentionally left untouched
   (no chapter-name needed inside the same file).
 
@@ -94,14 +94,14 @@ insertion).
 
 | Form | Example (ZH) | Example (EN) |
 |---|---|---|
-| Whole chapter | `1.4 字段定义 (fields.zh.md)` | `1.4 Field Definitions (fields.en.md)` |
-| Chapter + section | `1.5 验证规则 (rules.zh.md) § 10 政策 5` | `1.5 Validation Rules (rules.en.md) § 10` |
+| Whole chapter | `1.4 字段定义 (1.4-fields.zh.md)` | `1.4 Field Definitions (1.4-fields.en.md)` |
+| Chapter + section | `1.5 验证规则 (1.5-rules.zh.md) § 10 政策 5` | `1.5 Validation Rules (1.5-rules.en.md) § 10` |
 | Self-reference | `§ 4.1`（无章节名） | `§ 4.1` (no chapter name) |
-| Compact (in tables / mermaid) | `→ 1.4 fields.zh.md § 10 gap 3` | same |
+| Compact (in tables / mermaid) | `→ 1.4 1.4-fields.zh.md § 10 gap 3` | same |
 
 ## Out of scope / known follow-ups
 
-- `1.6 Baseline XLSX Behavior (baseline.zh.md)` is referenced everywhere
+- `1.6 Baseline XLSX Behavior (1.6-baseline.zh.md)` is referenced everywhere
   but the file itself is not yet authored — references will resolve once
   `stage1-mrc-baseline` is executed; no rework needed then.
 - `1.2.1` / `1.2.2` etc. (Carrington / Shellpoint sub-chapter numbering)

@@ -4,7 +4,7 @@
 |---|---|
 | Stage / todo-id | `stage1-mrc-business-purpose` (per-sheet business-intent intro) |
 | Date | 2026-05-17 |
-| Trigger | user prompt: "Please enhance both `sheets.md` and `fields.md` by adding a business-oriented introduction section for every Validation Report sheet" |
+| Trigger | user prompt: "Please enhance both `1.3-sheets.md` and `1.4-fields.md` by adding a business-oriented introduction section for every Validation Report sheet" |
 | Run by | agent |
 
 ## Scope
@@ -42,8 +42,8 @@ Total: **5 sheets × 4 files = 20 subsection blocks** inserted.
     - **风险 / 对账动机 / Risk and reconciliation motivation**
 - Cross-references to other MRC chapters use the three-element form
   established in `_chapter-index.md` (e.g.
-  `1.4 字段定义 (fields.zh.md)` / `1.6 Baseline XLSX Behavior
-  (baseline.en.md)`).
+  `1.4 字段定义 (1.4-fields.zh.md)` / `1.6 Baseline XLSX Behavior
+  (1.6-baseline.en.md)`).
 - Differentiation between `sheets.*.md` and `fields.*.md` content:
   `sheets` focuses on *what the page is and who reads it*; `fields`
   focuses on *what per-column lineage tells you and who maintains it*.
@@ -84,8 +84,8 @@ Both scripts are idempotent (re-runs report 0 changes).
 
 Two alternatives considered:
 1. **Renumber existing X.1 → X.2 etc.** — would break dozens of intra-doc
-   citations and risk breaking cross-doc references in `fields.zh.md` ↔
-   `sheets.zh.md` pairs (Stage 2 cell-identity contract).
+   citations and risk breaking cross-doc references in `1.4-fields.zh.md` ↔
+   `1.3-sheets.zh.md` pairs (Stage 2 cell-identity contract).
 2. **Insert as X.0** — unusual numbering, would confuse readers.
 3. **Unnumbered `### Business purpose`** (chosen) — appears in mkdocs
    outline as a peer to X.1 / X.2, requires zero renumbering, satisfies

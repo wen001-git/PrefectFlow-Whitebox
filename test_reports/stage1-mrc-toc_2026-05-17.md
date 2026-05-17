@@ -1,4 +1,4 @@
-# Stage 1 — MRC 1.0 章节地图与范围 (toc.zh.md) (TOC) — Test Report
+# Stage 1 — MRC 1.0 章节地图与范围 (1.0-toc.zh.md) (TOC) — Test Report
 
 - **Date**: 2026-05-17
 - **Scope**: end-of-chapter verification for `docs/mrc/toc.{zh,en}.md`
@@ -47,5 +47,5 @@ Propagation:
 - Off-by-one citation: `mrc_db.py` is 14 lines, not 15. Fixed `1-15` → `1-14`
   and `7-15` → `7-14` in both zh/en TOC files.
 - Wired `docs/mrc/toc.md` into `mkdocs.yml` nav under MRC.
-- Added `("mrc/toc.zh.md", "mrc/toc.en.md")` to `tools/stage_doc_checks.py`
+- Added `("mrc/1.0-toc.zh.md", "mrc/1.0-toc.en.md")` to `tools/stage_doc_checks.py`
   PAIRS (now 12 pairs).

@@ -1,4 +1,4 @@
-# Stage 1 — MRC 1.2 数据流层 (dataflow.zh.md) (Dataflow) — Test Report
+# Stage 1 — MRC 1.2 数据流层 (1.2-dataflow.zh.md) (Dataflow) — Test Report
 
 - **Date**: 2026-05-17
 - **Scope**: end-of-chapter verification for `docs/mrc/dataflow.{zh,en}.md`
@@ -41,7 +41,7 @@ All file:line citations validated by `stage_doc_checks.py` (494/0/0).
 ## Bookkeeping
 
 - Wired `docs/mrc/dataflow.md` into `mkdocs.yml` nav under MRC.
-- Added `("mrc/dataflow.zh.md", "mrc/dataflow.en.md")` to
+- Added `("mrc/1.2-dataflow.zh.md", "mrc/1.2-dataflow.en.md")` to
   `tools/stage_doc_checks.py` PAIRS (now 14 pairs).
 - SQL: `stage1-mrc-dataflow` → done.
 - Next ready todo: `stage1-mrc-sheets` (depends on 1.2; depended on by

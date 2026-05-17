@@ -75,7 +75,7 @@ SHEETS_ZH = {
 - **为什么 `pandi_diff_remitvsdaily` 不高亮（gap 1）/ Why actual-P&I diff is NOT
   highlighted**：actual 收款本身就会偏离计划（partial pay / prepay 都合法），高亮
   会噪音爆表；schedule view 才是稳定信号。这是**业务有意决策**，已在 § 6.1 gap 1
-  与 1.4 字段定义 (fields.zh.md) § 5 中显式标注。
+  与 1.4 字段定义 (1.4-fields.zh.md) § 5 中显式标注。
 - **常见失败场景 / Common failure scenarios**：
     - servicer 系统 reset 重置利率但 daily 未刷 → 7 行同步亮红；
     - bankruptcy plan modification 没回灌 daily → due date + balances 联动亮红；
@@ -109,7 +109,7 @@ SHEETS_ZH = {
     - prior daily 漏更新 → `*_chg_daily` 全 0，与 `*_remit` 形成大 diff。
 - **命名不对称提示 / Naming asymmetry note (gap 3)**：第 14 列 `recovcorpadv_diff_*`
   与第 10-13 列的 `reccorpadvance_*_daily` 前缀不同（`recov` vs `rec`）——这在 SQL
-  侧是有意区分的，详见 § 7.1 gap 3 与 1.4 字段定义 (fields.zh.md) § 6。
+  侧是有意区分的，详见 § 7.1 gap 3 与 1.4 字段定义 (1.4-fields.zh.md) § 6。
 - **风险 / 对账动机 / Risk motivation**：advance 是 servicing 流程中**现金影响最直接、
   会计分类最敏感**的环节；本表是 advance recovery 与 loss reserving 的对账锚点。
 """,
@@ -163,7 +163,7 @@ SHEETS_ZH = {
 - **关键技术注意 / Technical note for readers (gap 5)**：`amt_MoM` 保留 validator
   侧的 `±inf` / `NaN`（出现于 `amt_1m = 0` 时），且 `data_type_format` **不**给
   float 套 number_format，所以 Excel 里 `inf` 会按 openpyxl 默认方式落入（具体表达
-  待 1.6 Baseline XLSX 行为 (baseline.zh.md) 时验证）。
+  待 1.6 Baseline XLSX 行为 (1.6-baseline.zh.md) 时验证）。
 - **常见失败场景 / Common failure scenarios**：
     - 出现陌生的 `transaction_code` → 业务上往往是 servicer 系统改造未通知；
     - 某 bucket `amt_MoM` 突变（如 +500%）→ 触发 ops 排查；
@@ -245,7 +245,7 @@ SHEETS_EN = {
   receipts legitimately deviate from schedule (partial pays, prepays), so
   highlighting that column would explode the noise floor; the schedule view
   is the stable signal. This is an **intentional business decision**, also
-  flagged at § 6.1 gap 1 and 1.4 Field Definitions (fields.en.md) § 5.
+  flagged at § 6.1 gap 1 and 1.4 Field Definitions (1.4-fields.en.md) § 5.
 - **Common failure scenarios**:
     - Servicer system resets a rate but daily wasn't refreshed → 7 rows
       light up simultaneously;
@@ -292,7 +292,7 @@ SHEETS_EN = {
 - **Naming asymmetry note (gap 3)**: column 14 `recovcorpadv_diff_*` uses
   a different prefix than columns 10–13 (`reccorpadvance_*_daily`) —
   `recov` vs `rec`. The SQL side distinguishes them intentionally; see
-  § 7.1 gap 3 and 1.4 Field Definitions (fields.en.md) § 6.
+  § 7.1 gap 3 and 1.4 Field Definitions (1.4-fields.en.md) § 6.
 - **Risk motivation**: advances are the **single most cash-sensitive and
   most accounting-classification-sensitive** step in MRC servicing; this
   sheet is the reconciliation anchor for advance-recovery and loss-reserve
@@ -357,7 +357,7 @@ SHEETS_EN = {
   validator-side `±inf` / `NaN` (occurring when `amt_1m = 0`), and
   `data_type_format` does NOT apply a number_format to float, so Excel
   lands `inf` per openpyxl default (exact representation to be confirmed
-  in 1.6 Baseline XLSX Behavior (baseline.en.md)).
+  in 1.6 Baseline XLSX Behavior (1.6-baseline.en.md)).
 - **Common failure scenarios**:
     - Unfamiliar `transaction_code` appears → usually a servicer system
       change shipped without notice;
@@ -375,14 +375,14 @@ FIELDS_ZH = {
     "MRC_Summary_check": """
 - **业务用途 / Business purpose**：本节给 13 个 portfolio-level money sum 加 1
   个 `asofdate` stamp 提供**逐列血缘**——上游对应 SQL 哪一列、走的哪种聚合、
-  在 1.3 Sheet 渲染层 (sheets.zh.md) § 5 里如何渲染。它的目标读者是想反问
+  在 1.3 Sheet 渲染层 (1.3-sheets.zh.md) § 5 里如何渲染。它的目标读者是想反问
   "这一列到底从哪儿来"的工程师 / auditor / 重写者。
 - **它要回答的业务问题 / Business question it answers**：当 Summary 页某个汇总
   数字"看着不对"时，能否在 30 秒内定位到上游 SQL 的具体投影行？能否解释为什么
   这一列是 money 而不是 float？
-- **与 sheets.zh.md 的分工 / Division with sheets.zh.md**：sheets.zh.md § 5 描
+- **与 1.3-sheets.zh.md 的分工 / Division with 1.3-sheets.zh.md**：1.3-sheets.zh.md § 5 描
   述"页面长什么样、为谁服务"；本节描述"每个数字是哪个 SQL 表达式产生的"——
-  reverse-engineering 时优先读本节，业务分析时优先读 sheets.zh.md。
+  reverse-engineering 时优先读本节，业务分析时优先读 1.3-sheets.zh.md。
 - **数据口径 / Population**：每列对应 SQL 的一个 `SUM(...)` 投影，作用域
   = 整个 MRC 投资组合的当期。
 - **典型读者 / Audience**：Stage 2 重写者（要保持 cell-identity）、数据 audit
@@ -400,7 +400,7 @@ FIELDS_ZH = {
       存在但不高亮？
     - `intrate_diff` 是百分点差还是相对差？取整到几位？
     - `nextduedate_diff` 为什么声明为 `float` 但其实是天数差？（gap 2）
-- **与 sheets.zh.md 的分工 / Division with sheets.zh.md**：sheets.zh.md § 6 描
+- **与 1.3-sheets.zh.md 的分工 / Division with 1.3-sheets.zh.md**：1.3-sheets.zh.md § 6 描
   述渲染层（哪列高亮、用什么样式）；本节描述上游来源与变换公式（哪列来自哪个
   CTE、走哪种 join、用什么 transform）——两侧 cross-reference 紧密耦合。
 - **数据口径 / Population**：每列对应一笔贷款的一个属性 / 差异；行数 = MRC 投资
@@ -421,7 +421,7 @@ FIELDS_ZH = {
     - 第 14 列 `recovcorpadv_diff_*` 与第 10-13 列的 `reccorpadvance_*` 前缀
       不同到底是什么意思？（gap 3）
     - 哪些列只来自 daily 系统？哪些列只来自 remit？哪些是计算列？
-- **与 sheets.zh.md 的分工 / Division with sheets.zh.md**：sheets.zh.md § 7 解
+- **与 1.3-sheets.zh.md 的分工 / Division with 1.3-sheets.zh.md**：1.3-sheets.zh.md § 7 解
   释"为什么这 4 列要高亮"（业务理由）；本节解释"这 4 列具体怎么算出来"（公式）。
 - **数据口径 / Population**：每列对应一笔有 advance 活动的贷款的一个 advance
   bucket 属性 / 差异。
@@ -440,7 +440,7 @@ FIELDS_ZH = {
       反向？取整规则？
     - portmonth 缺 loan 时 diff = NULL 的具体 SQL 路径在哪？（gap 4 的代码位置）
     - `fctrdt`（SQL 过滤值）与 `asofdate`（remit_date stamp）的关系是什么？
-- **与 sheets.zh.md 的分工 / Division with sheets.zh.md**：sheets.zh.md § 8 解
+- **与 1.3-sheets.zh.md 的分工 / Division with 1.3-sheets.zh.md**：1.3-sheets.zh.md § 8 解
   释"这页是 revenue-side 唯一的对账页"（业务定位）；本节解释"diff 列是怎么
   算的、NULL 怎么来的"（公式 + 边界）。
 - **数据口径 / Population**：每行对应一笔同时存在于 remit 与 portmonth 的贷款；
@@ -461,7 +461,7 @@ FIELDS_ZH = {
     - 哪些 (bucket, description, transaction_code) 组合是已知合法集合？新出现
       的组合从哪发现？
     - `amt` 与 `amt_1m` 分别来自哪个 CTE？是同一聚合 key 在不同月份的快照吗？
-- **与 sheets.zh.md 的分工 / Division with sheets.zh.md**：sheets.zh.md § 9 解
+- **与 1.3-sheets.zh.md 的分工 / Division with 1.3-sheets.zh.md**：1.3-sheets.zh.md § 9 解
   释"这页是趋势页，不做对账"（业务定位 + 高亮策略）；本节解释"每列怎么算"
   （聚合 + 除零）。
 - **数据口径 / Population**：按 (bucket, description, transaction_code) 聚合
@@ -479,13 +479,13 @@ FIELDS_EN = {
 - **Business purpose**: this section provides **per-column lineage** for the
   13 portfolio-level money sums plus the `asofdate` stamp — which SQL
   projection produced each column, what aggregation was applied, and how
-  the column renders in 1.3 Sheet Rendering Layer (sheets.en.md) § 5. The
+  the column renders in 1.3 Sheet Rendering Layer (1.3-sheets.en.md) § 5. The
   target reader is the engineer / auditor / rewriter who wants to ask
   "where does this column actually come from?".
 - **Business question it answers**: when a summary number "looks wrong",
   can you locate the exact upstream SQL projection line in under 30
   seconds? Can you explain why this column is `money` rather than `float`?
-- **Division with sheets.en.md**: sheets.en.md § 5 describes "what the page
+- **Division with 1.3-sheets.en.md**: 1.3-sheets.en.md § 5 describes "what the page
   looks like and who it serves"; this section describes "which SQL
   expression produced each number" — when reverse-engineering, read this
   first; when business-analysing, read sheets first.
@@ -511,7 +511,7 @@ FIELDS_EN = {
       Rounded to how many decimals?
     - Why is `nextduedate_diff` declared `float` when it's really a
       day-count delta? (gap 2.)
-- **Division with sheets.en.md**: sheets.en.md § 6 describes the rendering
+- **Division with 1.3-sheets.en.md**: 1.3-sheets.en.md § 6 describes the rendering
   layer (which columns highlight, what style); this section describes the
   upstream source and transform formula (which CTE each column comes from,
   which join, which transform) — the two sides cross-reference tightly.
@@ -537,7 +537,7 @@ FIELDS_EN = {
       and cols 10–13 `reccorpadvance_*` actually mean? (gap 3.)
     - Which columns come only from daily, which only from remit, and which
       are calculated?
-- **Division with sheets.en.md**: sheets.en.md § 7 explains "why these 4
+- **Division with 1.3-sheets.en.md**: 1.3-sheets.en.md § 7 explains "why these 4
   columns are highlighted" (business rationale); this section explains
   "how those 4 columns are actually computed" (formula).
 - **Population**: each column = one advance-bucket attribute / diff for one
@@ -562,7 +562,7 @@ FIELDS_EN = {
       portmonth is missing the loan? (Code location of gap 4.)
     - What is the relationship between `fctrdt` (SQL filter value) and
       `asofdate` (remit_date stamp)?
-- **Division with sheets.en.md**: sheets.en.md § 8 explains "this is the
+- **Division with 1.3-sheets.en.md**: 1.3-sheets.en.md § 8 explains "this is the
   only revenue-side reconciliation page" (business framing); this section
   explains "how the diff column is computed and how NULLs arise" (formula
   + edge cases).
@@ -589,7 +589,7 @@ FIELDS_EN = {
       legal set? How are newly-appearing tuples surfaced?
     - From which CTEs do `amt` and `amt_1m` come? Are they the same
       aggregation key snapshotted in different months?
-- **Division with sheets.en.md**: sheets.en.md § 9 explains "this is a
+- **Division with 1.3-sheets.en.md**: 1.3-sheets.en.md § 9 explains "this is a
   trend page, not a reconciliation page" (business framing + highlight
   strategy); this section explains "how each column is computed"
   (aggregation + divide-by-zero).
@@ -662,10 +662,10 @@ def insert_into(path: Path, anchor: re.Pattern, content_map: dict, lang: str) ->
 
 def main():
     targets = [
-        (DOCS / "sheets.zh.md", SHEETS_FILE_ANCHOR, SHEETS_ZH, "zh"),
-        (DOCS / "sheets.en.md", SHEETS_FILE_ANCHOR, SHEETS_EN, "en"),
-        (DOCS / "fields.zh.md", FIELDS_FILE_ANCHOR, FIELDS_ZH, "zh"),
-        (DOCS / "fields.en.md", FIELDS_FILE_ANCHOR, FIELDS_EN, "en"),
+        (DOCS / "1.3-sheets.zh.md", SHEETS_FILE_ANCHOR, SHEETS_ZH, "zh"),
+        (DOCS / "1.3-sheets.en.md", SHEETS_FILE_ANCHOR, SHEETS_EN, "en"),
+        (DOCS / "1.4-fields.zh.md", FIELDS_FILE_ANCHOR, FIELDS_ZH, "zh"),
+        (DOCS / "1.4-fields.en.md", FIELDS_FILE_ANCHOR, FIELDS_EN, "en"),
     ]
     for path, anchor, cmap, lang in targets:
         n = insert_into(path, anchor, cmap, lang)

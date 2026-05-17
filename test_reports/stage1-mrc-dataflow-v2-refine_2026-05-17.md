@@ -4,13 +4,13 @@
 |---|---|
 | Stage / todo-id | `stage1-mrc-dataflow` (revision v2 — refine pass) |
 | Date | 2026-05-17 |
-| Trigger | user prompt: "pls refine the dataflow.md of MRC, according the diagram rule I just give to you" |
+| Trigger | user prompt: "pls refine the 1.2-dataflow.md of MRC, according the diagram rule I just give to you" |
 | Run by | agent |
 
 ## Scope of this refine pass
 
 Apply the newly-added user-level rule §7 and project-level AGENTS.md §6.10
-("Diagram + text co-requirement") to the existing MRC 1.2 数据流层 (dataflow.zh.md) dataflow doc.
+("Diagram + text co-requirement") to the existing MRC 1.2 数据流层 (1.2-dataflow.zh.md) dataflow doc.
 
 Changes:
 
@@ -48,8 +48,8 @@ No other files changed.
 | 2 | `pytest -q` (in `.venv`) | 0 | ✅ PASS | 14 passed in 2.27s |
 | 3 | `mkdocs build --strict` (in `.venv`) | 0 | ✅ PASS | Built in 9.50 seconds, no warnings |
 
-Heading alignment check after the refine: both `dataflow.zh.md` and
-`dataflow.en.md` still report **19 headings** (no new H2/H3 added — all
+Heading alignment check after the refine: both `1.2-dataflow.zh.md` and
+`1.2-dataflow.en.md` still report **19 headings** (no new H2/H3 added — all
 additions are figures + paragraphs inside existing sections).
 
 ## Failure severity
@@ -64,5 +64,5 @@ revision of the existing chapter.
 
 ## Next stage
 
-Next ready todo: `stage1-mrc-sheets` (1.3 Sheet 渲染层 (sheets.zh.md) — MRC per-sheet
+Next ready todo: `stage1-mrc-sheets` (1.3 Sheet 渲染层 (1.3-sheets.zh.md) — MRC per-sheet
 column-list helpers). User has not yet said "continue".

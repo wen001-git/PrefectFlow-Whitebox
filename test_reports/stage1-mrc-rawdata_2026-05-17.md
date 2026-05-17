@@ -1,4 +1,4 @@
-# Stage 1 — MRC 1.1 原始数据层 (rawdata.zh.md) (Raw data) — Test Report
+# Stage 1 — MRC 1.1 原始数据层 (1.1-rawdata.zh.md) (Raw data) — Test Report
 
 - **Date**: 2026-05-17
 - **Scope**: end-of-chapter verification for `docs/mrc/rawdata.{zh,en}.md`
@@ -18,7 +18,7 @@
 - Document header (purpose / audience / revision history) per AGENTS.md § 6.7.
 - One mermaid figure (Figure 1.1.5 — MRC ingestion call graph) with caption
   and legend table per AGENTS.md § 6.9.
-- Resolves the un-known `fctrdt` value left open in 1.0 章节地图与范围 (toc.zh.md):
+- Resolves the un-known `fctrdt` value left open in 1.0 章节地图与范围 (1.0-toc.zh.md):
   **`fctrdt = 2026-05-01`**, **`fctrdt_1m = 2026-04-01`** at baseline.
 - Enumerates the **13 ingested `mrc.portmrcremit*` tables** and the
   sheet→table / sheet→loanid-column / column-rename mappings.
@@ -44,7 +44,7 @@ All file:line citations validated by `stage_doc_checks.py` (412/0/0).
 ## Bookkeeping
 
 - Wired `docs/mrc/rawdata.md` into `mkdocs.yml` nav under MRC.
-- Added `("mrc/rawdata.zh.md", "mrc/rawdata.en.md")` to
+- Added `("mrc/1.1-rawdata.zh.md", "mrc/1.1-rawdata.en.md")` to
   `tools/stage_doc_checks.py` PAIRS (now 13 pairs).
 - SQL: `stage1-mrc-rawdata` → done.
 - Next ready todo: `stage1-mrc-dataflow` (depends on 1.1; depended on by

@@ -83,13 +83,13 @@ nav:
   - Servicers:
       - MRC:
           - Scope: servicers/mrc/scope.md
-          - Chapter TOC: mrc/toc.md
-          - 1.1 Raw data: mrc/rawdata.md
-          - 1.2 Dataflow: mrc/dataflow.md
-          - 1.3 Sheets: mrc/sheets.md
-          - 1.4 Fields: mrc/fields.md
-          - 1.5 Rules: mrc/rules.md
-          - 1.6 Baseline: mrc/baseline.md
+          - Chapter TOC: mrc/1.0-toc.md
+          - 1.1 Raw data: mrc/1.1-rawdata.md
+          - 1.2 Dataflow: mrc/1.2-dataflow.md
+          - 1.3 Sheets: mrc/1.3-sheets.md
+          - 1.4 Fields: mrc/1.4-fields.md
+          - 1.5 Rules: mrc/1.5-rules.md
+          - 1.6 Baseline: mrc/1.6-baseline.md
   - Pending servicers:
       - Arvest: arvest/_pending.md
       - CC5: cc5/_pending.md

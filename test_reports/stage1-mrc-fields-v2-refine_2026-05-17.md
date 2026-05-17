@@ -9,8 +9,8 @@
 
 ## Scope of this refine pass
 
-Enrich every per-sheet field lineage table in MRC 1.4 字段定义 (fields.zh.md) (`fields.en.md`
-and `fields.zh.md`) with two new columns to make business and computational
+Enrich every per-sheet field lineage table in MRC 1.4 字段定义 (1.4-fields.zh.md) (`1.4-fields.en.md`
+and `1.4-fields.zh.md`) with two new columns to make business and computational
 semantics fully explainable to future developers, reviewers, data analysts,
 validators, and Stage 2 rewrite efforts.
 
@@ -66,7 +66,7 @@ No source code changed. No SQL re-read. No new pytest / mkdocs tests added.
 
 | Check | Result |
 |---|---|
-| `python tools/stage_doc_checks.py` | **17/17 ALIGN OK**, fields.zh.md vs fields.en.md = 26 headings (adding table columns doesn't change heading depth) |
+| `python tools/stage_doc_checks.py` | **17/17 ALIGN OK**, 1.4-fields.zh.md vs 1.4-fields.en.md = 26 headings (adding table columns doesn't change heading depth) |
 | Citations | **698 PASS / 0 missing-file / 0 out-of-range** (was 697 after EN pass; +1 from legitimate re-citation in V2 row 35) |
 | `pytest -q` | **14 passed in 2.49s** |
 | `mkdocs build --strict` | **No warnings**; unicode notation `∑ ∩ ∪ − ⟶ ≔` renders fine in both languages |
@@ -95,20 +95,20 @@ Pseudo-code conventions:
 
 ## Cross-chapter pointers re-validated (no new claims invented)
 
-- V2 col 9 `totalservicefee` NULL-row exclusion → 1.5 验证规则 (rules.zh.md) § 10 政策 8 (existing)
-- V2 col 21 / col 24 NULL→0 masquerade → 1.5 验证规则 (rules.zh.md) § 10 政策 5 (existing)
-- V2 col 27 monthly→remit fallback ladder → 1.5 验证规则 (rules.zh.md) § 10 政策 3 (existing)
-- V3 col 14 `recov` vs `rec` naming asymmetry → 1.3 Sheet 渲染层 (sheets.zh.md) § 10 gap 3 (existing)
-- V3 cols 9/14/19/24 opposite-sign **+** diff convention → 1.3 Sheet 渲染层 (sheets.zh.md) § 10 (existing)
+- V2 col 9 `totalservicefee` NULL-row exclusion → 1.5 验证规则 (1.5-rules.zh.md) § 10 政策 8 (existing)
+- V2 col 21 / col 24 NULL→0 masquerade → 1.5 验证规则 (1.5-rules.zh.md) § 10 政策 5 (existing)
+- V2 col 27 monthly→remit fallback ladder → 1.5 验证规则 (1.5-rules.zh.md) § 10 政策 3 (existing)
+- V3 col 14 `recov` vs `rec` naming asymmetry → 1.3 Sheet 渲染层 (1.3-sheets.zh.md) § 10 gap 3 (existing)
+- V3 cols 9/14/19/24 opposite-sign **+** diff convention → 1.3 Sheet 渲染层 (1.3-sheets.zh.md) § 10 (existing)
 - V4 col 7 silent no-highlight when `p.servicefee` NULL → 1.5 R3 / 政策 6 (existing)
-- V5 col 6 `amt_MoM` `±inf` / `NaN` 4-case enumeration → 1.3 Sheet 渲染层 (sheets.zh.md) § 10 gap 5 (existing)
+- V5 col 6 `amt_MoM` `±inf` / `NaN` 4-case enumeration → 1.3 Sheet 渲染层 (1.3-sheets.zh.md) § 10 gap 5 (existing)
 
 All gaps pre-existed; this refine pass exposes them inline in the lineage
-tables instead of forcing readers to cross-jump to 1.3 Sheet 渲染层 (sheets.zh.md) / 1.5.
+tables instead of forcing readers to cross-jump to 1.3 Sheet 渲染层 (1.3-sheets.zh.md) / 1.5.
 
 ## Out of scope
 
-- Did not update `progress.md` item 19 (1.4 字段定义 (fields.zh.md) already marked done in
+- Did not update `progress.md` item 19 (1.4 字段定义 (1.4-fields.zh.md) already marked done in
   the original `stage1-mrc-fields_2026-05-17.md` test report)
 - Did not retitle headings; H1 / H2 / H3 / H4 structure unchanged
 - Did not edit any other chapter (1.0–1.3, 1.5)
@@ -116,5 +116,5 @@ tables instead of forcing readers to cross-jump to 1.3 Sheet 渲染层 (sheets.z
 ## Sign-off
 
 Refine pass closes the user's "business explainability + reverse-engineering
-transparency" requirement on 1.4 字段定义 (fields.zh.md). 1.4 字段定义 (fields.zh.md) v2 is now the
+transparency" requirement on 1.4 字段定义 (1.4-fields.zh.md). 1.4 字段定义 (1.4-fields.zh.md) v2 is now the
 canonical lineage reference for Stage 2 MRC rewrite.

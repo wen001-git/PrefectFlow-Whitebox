@@ -1,8 +1,8 @@
-# Stage 1 — `stage1-mrc-rules` (1.5 验证规则 (rules.zh.md)) — test report
+# Stage 1 — `stage1-mrc-rules` (1.5 验证规则 (1.5-rules.zh.md)) — test report
 
 - **Date**: 2026-05-17
-- **Scope**: MRC chapter sub-1.5 验证规则 (rules.zh.md) — rule catalog (`docs/mrc/rules.en.md` + `docs/mrc/rules.zh.md`)
-- **Trigger**: SQL todo `stage1-mrc-rules` flipped to `in_progress` after 1.4 字段定义 (fields.zh.md) delivery.
+- **Scope**: MRC chapter sub-1.5 验证规则 (1.5-rules.zh.md) — rule catalog (`docs/mrc/rules.en.md` + `docs/mrc/rules.zh.md`)
+- **Trigger**: SQL todo `stage1-mrc-rules` flipped to `in_progress` after 1.4 字段定义 (1.4-fields.zh.md) delivery.
 
 ## Files produced / modified
 
@@ -10,15 +10,15 @@
 |---|---|---|
 | `docs/mrc/rules.en.md` | NEW | 11 H2 + 18 H3 = 29 headings; ~35 KB; 9 OPEN-POLICY entries; 5 mermaid figures |
 | `docs/mrc/rules.zh.md` | NEW | Same 29-heading skeleton; ~25 KB; full prose mirror in Chinese (H2/H3 names kept English, matching dataflow/sheets/fields convention) |
-| `mkdocs.yml` | MOD | added `- 1.5 Rules: mrc/rules.md` under MRC nav (after 1.4) |
+| `mkdocs.yml` | MOD | added `- 1.5 Rules: mrc/1.5-rules.md` under MRC nav (after 1.4) |
 | `tools/stage_doc_checks.py` | MOD | PAIRS extended 16 → 17 |
 
 ## Test matrix
 
 | Check | Result | Detail |
 |---|---|---|
-| `python tools/stage_doc_checks.py` heading alignment | ✅ 17/17 ALIGN OK | new line: `mrc/rules.zh.md vs mrc/rules.en.md (29 headings)` |
-| `python tools/stage_doc_checks.py` source citations | ✅ 696 PASS / 0 missing-file / 0 out-of-range | up from 614 (= +82 new citations from 1.5 验证规则 (rules.zh.md)) |
+| `python tools/stage_doc_checks.py` heading alignment | ✅ 17/17 ALIGN OK | new line: `mrc/1.5-rules.zh.md vs mrc/1.5-rules.en.md (29 headings)` |
+| `python tools/stage_doc_checks.py` source citations | ✅ 696 PASS / 0 missing-file / 0 out-of-range | up from 614 (= +82 new citations from 1.5 验证规则 (1.5-rules.zh.md)) |
 | `pytest -q` | ✅ 14 passed in 2.30s | unchanged |
 | `mkdocs build --strict` | ✅ Documentation built in 11.14 seconds | no warnings; new 1.5 page rendered in both EN and ZH |
 
@@ -37,8 +37,8 @@ Each of the 5 mermaid figures in this chapter ships with a 5-bullet explanation 
 
 - **P0 (must-fix)**: none
 - **P1**: none
-- **P2**: 9 `OPEN-POLICY` entries explicitly tagged for 1.7 用户走读评审 review — these are *deliverable* outputs of 1.5 验证规则 (rules.zh.md), not defects
+- **P2**: 9 `OPEN-POLICY` entries explicitly tagged for 1.7 用户走读评审 review — these are *deliverable* outputs of 1.5 验证规则 (1.5-rules.zh.md), not defects
 
 ## Gate decision
 
-✅ **PASS** — 1.5 验证规则 (rules.zh.md) delivered. Test matrix green. 9 explicit policy questions handed off to 1.7 用户走读评审. Next: `stage1-mrc-baseline` (1.6 Baseline XLSX 行为 (baseline.zh.md) — capture 2026-04-30 baseline XLSX state per 1.3 Sheet 渲染层 (sheets.zh.md) rendering pipeline and 1.5 验证规则 (rules.zh.md) rule taxonomy).
+✅ **PASS** — 1.5 验证规则 (1.5-rules.zh.md) delivered. Test matrix green. 9 explicit policy questions handed off to 1.7 用户走读评审. Next: `stage1-mrc-baseline` (1.6 Baseline XLSX 行为 (1.6-baseline.zh.md) — capture 2026-04-30 baseline XLSX state per 1.3 Sheet 渲染层 (1.3-sheets.zh.md) rendering pipeline and 1.5 验证规则 (1.5-rules.zh.md) rule taxonomy).
