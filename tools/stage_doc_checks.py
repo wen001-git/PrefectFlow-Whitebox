@@ -10,6 +10,8 @@ ARCHIVE_DIR = DOC_DIR / "_archived" / "pre-mrc-pivot"
 
 # Pairs are (zh_relpath, en_relpath) relative to DOC_DIR.
 PAIRS = [
+    # G2a A6 — Redshift dependency catalog
+    ("mrc/_g2a-redshift-dependencies.zh.md", "mrc/_g2a-redshift-dependencies.en.md"),
     # v9.1 placeholder registry + 6 pending-servicer stubs
     ("_status/servicers-registry.zh.md", "_status/servicers-registry.en.md"),
     # MRC chapter (Stage 1, in progress)
