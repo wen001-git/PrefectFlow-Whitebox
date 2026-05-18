@@ -42,7 +42,6 @@ from typing import Any
 
 import openpyxl
 import pytest
-from openpyxl.styles import Font
 
 # ---------------------------------------------------------------------------
 # Path constants

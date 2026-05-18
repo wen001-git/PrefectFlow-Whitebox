@@ -279,3 +279,7 @@ You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\C
 
 # Your task: Round 2 C5 — End-to-end harness validation (THE GATE)
 [... full task spec as provided in session ...]
+
+## 2026-05-18 — Round 3 P2.5 MRC engine
+
+1. [resume autonomously: stage2-mrc-engine keystone todo, summary describes prior context — finish Parts C–F: CLI, API engine_backend, tests, smoke run + verdict.json, commit + push]

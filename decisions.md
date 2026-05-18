@@ -167,3 +167,5 @@ long-term migration target.
 - **Q1-Q4 user decisions** recorded in plan.md § 10.1: G2a deferred / Next.js+FastAPI / pin openpyxl / G1 archive as living docs.
 - **Round 2 bug fix** — commit `95d289d` lands the actual `tools/xlsx_diff.py` + tests; original 7058ec8 had wrong message vs content. Discovered during P2.0 audit.
 
+- **2026-05-18 — Engine `DEGRADED` covers DuckDB binder/catalog errors** — schema mismatches between fixture CSVs and the resolved SQL are treated identically to missing fixtures (degraded sheet, not ERROR), so a partial CTE harness can run end-to-end. `ERROR` is reserved for engine-internal bugs.
+- **2026-05-18 — API engine backend opt-in via `ENGINE_BACKEND=live`** — default stays `fixtures` so the FE contract test pack is unaffected. Live mode currently swaps only the `/runs` and `/runs/{id}/sheets` endpoints; cell/diff/lineage/export still serve fixtures until their wiring lands.

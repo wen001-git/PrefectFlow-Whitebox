@@ -1,19 +1,19 @@
 """Unit tests for tools/freeze_snapshot.py placeholder resolver (G2a A3)."""
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
 
+import pytest
 from freeze_snapshot import (  # type: ignore[import]
+    _MRC_BUILTIN_BINDINGS,
+    _MRC_BUILTIN_FANOUT,
     _apply_bindings,
     _unresolved_placeholders,
     resolve_template,
-    _MRC_BUILTIN_BINDINGS,
-    _MRC_BUILTIN_FANOUT,
 )
-
-import pytest
 
 _BINDINGS = _MRC_BUILTIN_BINDINGS
 _FANOUT = _MRC_BUILTIN_FANOUT

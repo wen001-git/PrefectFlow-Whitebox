@@ -30,10 +30,26 @@ Then open <http://127.0.0.1:8000/openapi.json> for the OpenAPI schema or
 ## Endpoints
 
 > **Note:** business endpoints are now backed by typed pydantic schemas
-> in `whitebox/api/schemas.py`. The bodies are produced by the fixture
-> provider in `whitebox/api/data/fixtures.py` (marked
-> `# FIXTURE: replaced by engine/storage in later todos`); the public
-> HTTP / JSON contract is stable from `d-api-contracts` onward.
+> in `whitebox/api/schemas.py`. By default bodies are produced by the
+> fixture provider in `whitebox/api/data/fixtures.py`; setting the
+> environment variable `ENGINE_BACKEND=live` swaps in the live engine
+> adapter at `whitebox/api/data/engine_backend.py`, which serves real
+> :class:`whitebox.engine.Engine` output for the `/runs` and `/runs/.../sheets`
+> endpoints. (Cell, diff, lineage and export still serve fixtures —
+> those join the live backend in subsequent todos.) The public HTTP /
+> JSON contract is stable from `d-api-contracts` onward.
+
+### Engine backend selection
+
+| `ENGINE_BACKEND` env var | Provider                                | Used by                                                          |
+|--------------------------|-----------------------------------------|------------------------------------------------------------------|
+| _unset_ / `fixtures`     | `whitebox.api.data.fixtures`            | All endpoints (FE-friendly static fixtures, default).            |
+| `live`                   | `whitebox.api.data.engine_backend`      | `/runs`, `/runs/{id}`, `/runs/{id}/sheets`, `/runs/{id}/sheets/{name}`. Other endpoints still fall back to fixtures. |
+
+The live backend boots `Engine.bootstrap_mrc()` and runs the MRC
+pipeline against the bundled CTE harness fixtures
+(`tests/fixtures/cte_harness/`) on first request, caching the
+`RunResult` for the process lifetime.
 
 | Method | Path                                                              | Router       |
 |--------|-------------------------------------------------------------------|--------------|

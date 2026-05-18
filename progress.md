@@ -164,3 +164,13 @@ For full per-checkpoint history see
 - Fixed Round 2 bug: commit `95d289d` landed the actual `tools/xlsx_diff.py` + 16 tests + help (original 7058ec8 had wrong message/content).
 - Marked todos done: `d-arch-freeze`, `d-pr-evidence-rule`.
 - Unlocks Round 3 wave: P2.1 (registry/transform/cte-harness) + P2.2 (sheets/renderer) + P2.3 (fastapi-skel) ready for parallel fleet.
+
+## 2026-05-18 — P2.5 MRC validation engine landed
+
+- Engine package `whitebox/engine/` (pipeline, runner, sources, results, mrc_wiring, `__main__`) — thin orchestrator wiring registry → ingestion/cte_harness → sheets → renderer.
+- 5 MRC validator stubs in `whitebox/validators/mrc/` wrap the frozen resolved SQLs under `baselines/mrc/2026-04-30/.../resolved/`. `mrc_service_fee_check` runs cleanly on the bundled CTE harness; the other 4 mark sheets `DEGRADED` (catalog/schema mismatch — fixture coverage gap).
+- CLI: `python -m whitebox.engine --servicer MRC --remit-date 2026-04-30 --source cte-harness --output <dir>` writes `validation_report.xlsx` + `RunResult.json`.
+- API: opt-in `ENGINE_BACKEND=live` swaps `/runs` + `/runs/{id}/sheets` to engine output via `whitebox/api/data/engine_backend.py`. README updated.
+- Tests: `tests/engine/` (5 files, 20 tests). Full suite 269 passed (249 baseline + 20). mypy strict on 61 source files passes. ruff clean on all new code.
+- Smoke (Part F): two CLI runs → `tools/compare_validation.py compare` → `runs/p25-engine-smoke/compare/verdict.json` = **PASS** (cell-identical, 0 major / 0 minor across all 5 sheets). Engine renderer confirmed deterministic.
+- Run id: `run_mrc_2026-04-30_cte-harness_2a270dc6`.

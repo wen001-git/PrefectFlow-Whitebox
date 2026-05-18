@@ -9,14 +9,12 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "tools"))
 
 from freeze_snapshot import (  # type: ignore[import]
-    _run_verify_checks,
     _compute_expected_logical_names,
     _parse_coverage_md_mrc_owners,
+    _run_verify_checks,
 )
 
 # ---------------------------------------------------------------------------

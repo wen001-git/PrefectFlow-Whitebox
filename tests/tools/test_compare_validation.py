@@ -22,8 +22,7 @@ import sys
 from pathlib import Path
 
 import openpyxl
-import pytest
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Font
 
 # ---------------------------------------------------------------------------
 # Import helpers
@@ -37,7 +36,6 @@ from compare_validation import (  # type: ignore[import]
     VERDICT_MAJOR,
     VERDICT_MINOR,
     VERDICT_PASS,
-    build_verdict,
     orchestrate,
 )
 

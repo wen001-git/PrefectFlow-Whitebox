@@ -15,7 +15,7 @@ import pytest
 TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
 sys.path.insert(0, str(TOOLS_DIR))
 
-from run_newsystem_mrc import main, MRC_SHEETS  # type: ignore[import]
+from run_newsystem_mrc import MRC_SHEETS, main  # type: ignore[import]
 
 REMIT_DATE = "2026-04-30"
 
