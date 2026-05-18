@@ -124,3 +124,24 @@ Every stage todo (Stage 1 chapter or Stage 2 deliverable) must run the test matr
 ## 2026-05-17 — G2a A5 — operator runbook landed
 
 - **2026-05-17 — G2a A5: bilingual operator runbook + .env.example shipped** — Rationale: all G2a Track A agent-doable tooling (A1–A4, A6) is complete; the only remaining work to close G2a is the operator export run. The runbook (	ools/docs/g2a-operator-runbook.{en,zh}.md) gives any operator a single document to execute the full freeze workflow end-to-end: pre-flight checklist (VPN, Vault, Python env), Step 1 plan --resolve, Step 2 SQL review, Step 3 export snippet (copy-pasteable Python, outside the repo), Step 4 _manifest.json schema + worked example, Step 5 erify with exit-code table, Step 6 commit + hand-off instructions, credentials do-not-commit checklist, and troubleshooting for all 5 known failure modes (C1/C2/C3/C6 verify failures + Vault expiry + unresolved placeholders). .env.example added to project root (.env already gitignored). G2a Track A is now tooling-complete; operator export is the sole remaining step.
+
+
+## 2026-05-18 — Strategy pivot: live legacy-vs-new comparison
+
+**Trigger**: G2a environment-blocked (no Redshift/VPN/Vault credentials available).
+**Decision**: Pivot validation strategy temporarily.
+- G2a (frozen snapshot) → deferred / environment-blocked enhancement
+- G2b old (parquet-shim replay) → deferred
+- G2b-LIVE (new hard gate) → live legacy-vs-new XLSX comparison harness validated end-to-end
+- G3 → incremental V1-V12 confirmation via per-PR comparison evidence (no big-bang sweep)
+
+**Rationale**: highest project risk is behavioral mismatch with legacy; need a trustworthy
+validation mechanism before scaling implementation. Frozen-baseline ideal preserved as
+long-term migration target.
+
+**Scope of pivot**:
+- Allowed: Stage 2 architecture / data model / validator framework / UI / lineage / renderer / MRC validator impl (after G2b-LIVE closes)
+- Required: comparison-run evidence per impl PR
+- Preserved: § 4.2 / § 4.4 (long-term ideal); A1-A6 tooling stays
+
+**References**: plan.md § 9; docs/stage2/10.0-validation-strategy.{zh,en}.md

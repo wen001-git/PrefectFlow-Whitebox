@@ -16,16 +16,20 @@
 
 ## Current stage
 
-**Stage 2 — design pass (in parallel with closing G2 + G3 baseline gates).**
+**Stage 2 design + Round 2 comparison harness build (impl tier blocked on G2b-LIVE).**
 Stage 1 G1 sign-off recorded 2026-05-17 (provisional, iterative refinement
 allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 (Stage 2 Readiness Assessment). Status registry: `docs/_status/servicers-registry.{zh,en}.md`.
 
-**Active gates**
-- ✅ G1 closed — `stage1-mrc-review` done (provisional sign-off, see `decisions.md` 2026-05-17 entry)
-- ⏸ **G2a** open — `mrc-snapshot` (export Redshift inputs to local Parquet/CSV under `baselines/mrc/2026-04-30/input_snapshots/`; needs user with Redshift access). **Redefined 2026-05-17**: G2 no longer means "freeze Redshift"; it means freeze the **input dataset**. See `decisions.md` 2026-05-17 entry + session `plan.md` § 4.2. **✅ tooling complete; awaiting operator export** — see `tools/docs/g2a-operator-runbook.{en,zh}.md`.
-- ⏸ **G2b** open — `mrc-source-baseline` + `mrc-gold` (run unmodified legacy MRC code against frozen snapshot via Parquet shim; produce baseline XLSX + manifest; cross-check vs LearningLog gold XLSX). Agent-driven once G2a lands.
-- ⏸ G3 open — `stage1-mrc-baseline-verify` (V1–V12 against physical XLSX from G2b)
+**Gate status** (updated 2026-05-18 — strategy pivot, see `decisions.md` + `docs/stage2/10.0-validation-strategy.{zh,en}.md`)
+
+| Gate | Status | Closed by | Notes |
+|---|---|---|---|
+| G1 | ✅ closed 2026-05-17 | provisional sign-off | AGENTS § 6.11 living-docs |
+| G2a (frozen snapshot) | ⏸ DEFERRED 2026-05-18 | environment-blocked | tooling ready (A1-A6); awaiting cred window |
+| G2b-OLD (parquet-shim replay) | ⏸ DEFERRED 2026-05-18 | depends on G2a | retained as long-term ideal |
+| **G2b-LIVE (comparison harness)** | 🟡 IN PROGRESS — Round 2 | C1-C6 todos | NEW hard gate; gates Stage 2 impl |
+| G3 (V1-V12 confirmation) | 🔄 REDEFINED — incremental | per-PR evidence | no big-bang sweep |
 
 ### G2a Track A progress
 

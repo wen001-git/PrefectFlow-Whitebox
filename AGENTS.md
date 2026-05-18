@@ -326,6 +326,25 @@ must be reconciled in the next refinement pass.
 
 ---
 
+## 6.12 Temporary validation strategy (2026-05-18 → ?)
+
+The project currently operates under a temporary live legacy-vs-new comparison strategy
+because Redshift credentials are unavailable for frozen-baseline freeze (G2a). All Stage 2
+implementation work uses `tools/compare_validation.py` against fresh legacy runs as the
+validation oracle. See `docs/stage2/10.0-validation-strategy.{zh,en}.md` and `plan.md` § 9.
+
+**Caveats**: non-reproducible across days; weak historical debugging; operator bottleneck;
+shared-bug blindspot; cross-day non-determinism false positives.
+
+**When this applies**: G2a remains environment-blocked. The moment credentials become
+available, run the operator runbook (`tools/docs/g2a-operator-runbook.{en,zh}.md`) to
+close G2a, then G2b-OLD and G3 become meaningful again.
+
+**Migration target**: revisit G2a/G2b/G3 when credentials become available.
+See `docs/stage2/10.0-validation-strategy.{zh,en}.md` § 8 for the full migration path.
+
+---
+
 ## 7. Sibling / related repos
 
 - `C:\Users\jli\MyData\Copilot\PrefectFlow` — **read-only source**. The pipeline being whiteboxed.
