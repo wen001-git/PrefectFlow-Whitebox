@@ -352,3 +352,39 @@ See `docs/stage2/10.0-validation-strategy.{zh,en}.md` § 8 for the full migratio
 - This repo (`PrefectFlow-Whitebox`) — the active whitebox rebuild.
 
 Per user's standing rule: **sibling `*-LearningLog` repos are read-only from any other repo's session**.
+
+## 6.13 PR evidence rule (Round 3, post-architecture-freeze)
+
+Any pull request that modifies code under any of:
+
+- `whitebox/engine`
+- `whitebox/sheets`
+- `whitebox/renderer`
+- `whitebox/validators`
+- `whitebox/transform`
+- `whitebox/ingestion`
+- `whitebox/registry`
+
+**MUST** include in the PR description:
+
+1. The exact `python tools/compare_validation.py auto ...` command used.
+2. The resulting `verdict.json` content (verdict + summary).
+3. If `MINOR_DIFFS`: explicit justification + ADR reference in `decisions.md`.
+4. If `MAJOR_DIFFS`: PR must NOT be merged.
+
+Enforced via `.github/PULL_REQUEST_TEMPLATE.md` and reviewer responsibility.
+Documentation-only / tooling-only PRs are exempt.
+
+See `docs/stage2/11.0-architecture` § 6 for full text.
+
+## 6.14 Frontend dependency restraint (Round 3)
+
+The `apps/web/` Next.js scaffold starts with the **minimum** library set:
+App Router + Tailwind + one graph library (react-flow or cytoscape).
+
+Adding any of: Redux, Zustand, tRPC, RTK Query, React Query, Apollo,
+state-machine libs, form libs (other than native) — **requires an ADR**
+in `decisions.md` explaining the concrete pain that justifies it.
+
+Rationale: per plan.md § 10.2 — start small, grow when real need appears,
+not preemptively.

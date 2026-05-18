@@ -153,3 +153,14 @@ For the next agent (or me, next turn):
 
 For full per-checkpoint history see
 `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\checkpoints\`.
+
+## 2026-05-18 — P2.0 architecture freeze landed
+
+- Pinned `openpyxl==3.1.5` in `pyproject.toml` + added `[project.optional-dependencies].api` group (fastapi/uvicorn/pydantic/httpx).
+- Wrote `docs/stage2/11.0-architecture.{en,zh}.md`: repo layout, module boundaries, version pins, PR evidence rule, FE restraint.
+- Created `.github/PULL_REQUEST_TEMPLATE.md` enforcing comparison-run evidence.
+- Updated `AGENTS.md` § 6.13 (PR evidence) + § 6.14 (FE dep restraint).
+- Updated `decisions.md` with Round 3 freeze ADR.
+- Fixed Round 2 bug: commit `95d289d` landed the actual `tools/xlsx_diff.py` + 16 tests + help (original 7058ec8 had wrong message/content).
+- Marked todos done: `d-arch-freeze`, `d-pr-evidence-rule`.
+- Unlocks Round 3 wave: P2.1 (registry/transform/cte-harness) + P2.2 (sheets/renderer) + P2.3 (fastapi-skel) ready for parallel fleet.

@@ -155,3 +155,15 @@ long-term migration target.
 ## 2026-05-18 — Round 2 C5 — comparison harness end-to-end validation passed; G2b-LIVE gate CLOSED
 
 - **2026-05-18 — Round 2 C5 passed; G2b-LIVE gate closed** — 	ests/integration/comparison/test_harness_e2e.py delivers 12 integration tests (S1-S11 + fixture reproducibility). All 12 pass green in 18.9 s on first run. Exercises C1+C3+C4 in true subprocess end-to-end workflows covering all 8 required scenarios plus 3 optional. S7 asserts all 4 documented C3 perturbations (value_diff / font_diff / missing_row / extra_sheet) are detectable. No xfails; no follow-up todos created. Full suite (88 tests) passes; stage_doc_checks.py 798 citations clean. Gate status: G2b-LIVE closed. Stage 2 implementation tier (stage2-mrc-*-impl) unblocked pending user go-ahead.
+
+## 2026-05-18 — Round 3 architecture freeze (P2.0)
+
+- **Repo layout** — extend `whitebox/` with sub-packages (registry, ingestion, transform, engine, sheets, renderer, api); Next.js frontend lives at `apps/web/`. No moves of existing files.
+- **openpyxl pinned to ==3.1.5** — cell-identity stability is contractual (Round 2 C5 verified). Any bump requires ADR + full cell-identity re-verification via `tools/xlsx_diff.py`.
+- **Python 3.10.x kept** — Prefect ecosystem compatibility.
+- **Backend = FastAPI >=0.115** — async-native, OpenAPI for FE codegen.
+- **Frontend = Next.js ^14.2 + Tailwind only** at start — NO Redux/Zustand/tRPC etc. until justified by ADR (per plan.md § 10.2 restraint).
+- **PR evidence rule** — any PR touching engine/sheets/renderer/validators/transform/ingestion/registry must attach `compare_validation.py auto` verdict.json. MAJOR_DIFFS = block merge. Enforced via `.github/PULL_REQUEST_TEMPLATE.md`.
+- **Q1-Q4 user decisions** recorded in plan.md § 10.1: G2a deferred / Next.js+FastAPI / pin openpyxl / G1 archive as living docs.
+- **Round 2 bug fix** — commit `95d289d` lands the actual `tools/xlsx_diff.py` + tests; original 7058ec8 had wrong message vs content. Discovered during P2.0 audit.
+
