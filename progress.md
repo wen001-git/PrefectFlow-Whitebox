@@ -16,7 +16,7 @@
 
 ## Current stage
 
-**Stage 2 design + Round 2 comparison harness build (impl tier blocked on G2b-LIVE).**
+**G2b-LIVE comparison harness gate ✅ CLOSED 2026-05-18. Stage 2 implementation tier ready to open (Round 3 pending user go-ahead).**
 Stage 1 G1 sign-off recorded 2026-05-17 (provisional, iterative refinement
 allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 (Stage 2 Readiness Assessment). Status registry: `docs/_status/servicers-registry.{zh,en}.md`.
@@ -28,7 +28,7 @@ allowed — see `AGENTS.md` § 6.11). Plan: see session folder `plan.md`
 | G1 | ✅ closed 2026-05-17 | provisional sign-off | AGENTS § 6.11 living-docs |
 | G2a (frozen snapshot) | ⏸ DEFERRED 2026-05-18 | environment-blocked | tooling ready (A1-A6); awaiting cred window |
 | G2b-OLD (parquet-shim replay) | ⏸ DEFERRED 2026-05-18 | depends on G2a | retained as long-term ideal |
-| **G2b-LIVE (comparison harness)** | 🟡 IN PROGRESS — Round 2 | C1-C6 todos | NEW hard gate; gates Stage 2 impl |
+| **G2b-LIVE (comparison harness)** | ✅ **closed** 2026-05-18 | C1-C6 todos | Gate closed by C5 — Stage 2 impl tier ready to open (Round 3 pending user go-ahead) |
 | G3 (V1-V12 confirmation) | 🔄 REDEFINED — incremental | per-PR evidence | no big-bang sweep |
 
 ### G2a Track A progress
@@ -138,7 +138,7 @@ For the next agent (or me, next turn):
 | **C2** — Legacy MRC runner adapter | ✅ **done** 2026-05-18 | `tools/run_legacy_mrc.py`; `tests/tools/test_run_legacy_mrc.py`; `tools/docs/run_legacy_mrc.md` |
 | **C3** — New-system runner stub | ✅ **done** 2026-05-18 | `tools/run_newsystem_mrc.py`; `tests/tools/test_run_newsystem_mrc.py`; `tools/docs/run_newsystem_mrc.md` |
 | **C4** — Comparison orchestrator CLI | ✅ **done** 2026-05-18 | `tools/compare_validation.py`; `tests/tools/test_compare_validation.py` (12 tests); `tools/docs/compare_validation.md` |
-| **C5** — End-to-end harness validation | ⏳ pending | tbd |
+| **C5** — End-to-end harness validation | ✅ **done** 2026-05-18 | `tests/integration/comparison/test_harness_e2e.py` (12 tests, 8 required + 3 optional + 1 reproducibility); all pass 18.9 s; S7 detects all 4 C3 perturbations |
 | **C6** — Validation-strategy doc bilingual | ✅ **done** 2026-05-18 | `docs/stage2/10.0-validation-strategy.{zh,en}.md` |
 
 ---

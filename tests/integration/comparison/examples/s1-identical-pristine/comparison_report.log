@@ -1,0 +1,9 @@
+2026-05-18T02:19:05 INFO     compare_validation.py v1.0.0
+2026-05-18T02:19:05 INFO     legacy XLSX : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s1-identical-pristine\_tmp_leg\validation_report.xlsx
+2026-05-18T02:19:05 INFO     new XLSX    : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s1-identical-pristine\_tmp_new\validation_report.xlsx
+2026-05-18T02:19:05 INFO     report dir  : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s1-identical-pristine
+2026-05-18T02:19:05 INFO     running diff: float_tol=0 ignore_style=False ignore_format=False ignore_row_heights=False
+2026-05-18T02:19:05 INFO     diff complete: major=0 minor=0 identical=True exit=0
+2026-05-18T02:19:05 INFO     HTML report : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s1-identical-pristine\comparison_report.html
+2026-05-18T02:19:05 INFO     JSON report : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s1-identical-pristine\comparison_report.json
+2026-05-18T02:19:05 INFO     verdict     : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s1-identical-pristine\verdict.json

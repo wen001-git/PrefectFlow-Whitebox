@@ -1,0 +1,10 @@
+2026-05-18T02:19:10 INFO     compare_validation.py v1.0.0
+2026-05-18T02:19:10 INFO     legacy XLSX : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s7-c3-perturbed-detected\_tmp_legacy\validation_report.xlsx
+2026-05-18T02:19:10 INFO     new XLSX    : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s7-c3-perturbed-detected\_tmp_new\validation_report.xlsx
+2026-05-18T02:19:10 INFO     report dir  : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s7-c3-perturbed-detected
+2026-05-18T02:19:10 INFO     running diff: float_tol=0 ignore_style=False ignore_format=False ignore_row_heights=False
+2026-05-18T02:19:10 INFO     diff complete: major=11 minor=25 identical=False exit=2
+2026-05-18T02:19:10 INFO     HTML report : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s7-c3-perturbed-detected\comparison_report.html
+2026-05-18T02:19:10 INFO     JSON report : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s7-c3-perturbed-detected\comparison_report.json
+2026-05-18T02:19:10 INFO     verdict     : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s7-c3-perturbed-detected\verdict.json
+2026-05-18T02:19:10 WARNING  WARN: harness may have missed expected perturbations: ['extra_sheet', 'font_diff', 'missing_row', 'value_diff']

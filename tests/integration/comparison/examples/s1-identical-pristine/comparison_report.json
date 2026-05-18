@@ -1,0 +1,78 @@
+{
+  "diffs": [],
+  "generated_at": "2026-05-18T06:19:05.734414Z",
+  "legacy": {
+    "openpyxl_version": "3.1.5",
+    "path": "C:\\Users\\jli\\MyData\\Copilot\\PrefectFlow-Whitebox\\tests\\integration\\comparison\\examples\\s1-identical-pristine\\_tmp_leg\\validation_report.xlsx",
+    "sha256": "bf3216ec942b4b2f23f7fe2d248d2e0f4e13137c84a0fa92aa997ab00a7ddd73",
+    "size_bytes": 9672
+  },
+  "legacy_run": {},
+  "new": {
+    "openpyxl_version": "3.1.5",
+    "path": "C:\\Users\\jli\\MyData\\Copilot\\PrefectFlow-Whitebox\\tests\\integration\\comparison\\examples\\s1-identical-pristine\\_tmp_new\\validation_report.xlsx",
+    "sha256": "270d5374ef1d9f75bd25472f53f887cd2f0aa26db20e4014db0400c9671bbf75",
+    "size_bytes": 9672
+  },
+  "new_run": {},
+  "structure": {
+    "merged_diffs_per_sheet": {},
+    "sheets_legacy": [
+      "MRC_Summary_check",
+      "MRC_General_Check",
+      "MRC_Advance_Check",
+      "MRC_ServiceFee_Check",
+      "MRC_Adv_Info"
+    ],
+    "sheets_new": [
+      "MRC_Summary_check",
+      "MRC_General_Check",
+      "MRC_Advance_Check",
+      "MRC_ServiceFee_Check",
+      "MRC_Adv_Info"
+    ]
+  },
+  "summary": {
+    "identical": true,
+    "major_diff_count": 0,
+    "minor_diff_count": 0,
+    "per_sheet": [
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Summary_check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_General_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Advance_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_ServiceFee_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Adv_Info"
+      }
+    ]
+  },
+  "tool_version": "1.0.0"
+}

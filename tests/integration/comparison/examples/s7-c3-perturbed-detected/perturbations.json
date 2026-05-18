@@ -1,0 +1,28 @@
+[
+  {
+    "id": "value_diff",
+    "sheet": "MRC_General_Check",
+    "cell": "row=2,col=4",
+    "expected": 0.04,
+    "actual": 0.05,
+    "description": "rate changed from 0.04 to 0.05 in row 2"
+  },
+  {
+    "id": "font_diff",
+    "sheet": "MRC_Advance_Check",
+    "cell": "A2",
+    "expected": "bold=False",
+    "actual": "bold=True",
+    "description": "A2 font bold flipped to True"
+  },
+  {
+    "id": "extra_sheet",
+    "sheet": "_PERTURBATION_EXTRA",
+    "description": "extra worksheet appended \u2014 not present in pristine output"
+  },
+  {
+    "id": "missing_row",
+    "sheet": "MRC_ServiceFee_Check",
+    "description": "last data row (index 4) omitted \u2014 3 rows instead of 4"
+  }
+]

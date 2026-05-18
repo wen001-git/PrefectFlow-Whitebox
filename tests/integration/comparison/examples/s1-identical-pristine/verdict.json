@@ -1,0 +1,66 @@
+{
+  "exit_code": 0,
+  "generated_at": "2026-05-18T06:19:05.889748+00:00",
+  "legacy_run": {
+    "path": null,
+    "sha256": null,
+    "source_repo_sha": null,
+    "started_at": null
+  },
+  "new_run": {
+    "mode": null,
+    "path": null,
+    "sha256": null,
+    "started_at": null
+  },
+  "next_steps": [
+    "Cell-identity confirmed. Safe to ship."
+  ],
+  "remit_date": null,
+  "servicer": null,
+  "summary": {
+    "identical": true,
+    "major_diff_count": 0,
+    "minor_diff_count": 0,
+    "per_sheet": [
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Summary_check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_General_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Advance_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_ServiceFee_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Adv_Info"
+      }
+    ]
+  },
+  "tool_version": "1.0.0",
+  "verdict": "PASS",
+  "warnings": []
+}

@@ -1,0 +1,76 @@
+{
+  "exit_code": 2,
+  "generated_at": "2026-05-18T06:19:10.266638+00:00",
+  "legacy_run": {
+    "path": null,
+    "sha256": null,
+    "source_repo_sha": null,
+    "started_at": null
+  },
+  "new_run": {
+    "mode": "perturbed",
+    "path": null,
+    "sha256": null,
+    "started_at": null
+  },
+  "next_steps": [
+    "Investigate engine/transform; cite ch 1.4 / 1.5 for expected behavior.",
+    "Sheet missing/extra \u2192 check sheet renderer registration."
+  ],
+  "remit_date": null,
+  "servicer": null,
+  "summary": {
+    "identical": false,
+    "major_diff_count": 11,
+    "minor_diff_count": 25,
+    "per_sheet": [
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Summary_check"
+      },
+      {
+        "extra": false,
+        "major": 1,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_General_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 1,
+        "missing": false,
+        "sheet": "MRC_Advance_Check"
+      },
+      {
+        "extra": false,
+        "major": 8,
+        "minor": 24,
+        "missing": false,
+        "sheet": "MRC_ServiceFee_Check"
+      },
+      {
+        "extra": false,
+        "major": 0,
+        "minor": 0,
+        "missing": false,
+        "sheet": "MRC_Adv_Info"
+      },
+      {
+        "extra": true,
+        "major": 1,
+        "minor": 0,
+        "missing": false,
+        "sheet": "_PERTURBATION_EXTRA"
+      }
+    ]
+  },
+  "tool_version": "1.0.0",
+  "verdict": "MAJOR_DIFFS",
+  "warnings": [
+    "harness may have missed expected perturbations: ['extra_sheet', 'font_diff', 'missing_row', 'value_diff']"
+  ]
+}

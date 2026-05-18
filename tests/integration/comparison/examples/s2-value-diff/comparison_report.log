@@ -1,0 +1,9 @@
+2026-05-18T02:19:06 INFO     compare_validation.py v1.0.0
+2026-05-18T02:19:06 INFO     legacy XLSX : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s2-value-diff\_baseline.xlsx
+2026-05-18T02:19:06 INFO     new XLSX    : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s2-value-diff\_modified.xlsx
+2026-05-18T02:19:06 INFO     report dir  : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s2-value-diff
+2026-05-18T02:19:06 INFO     running diff: float_tol=0 ignore_style=False ignore_format=False ignore_row_heights=False
+2026-05-18T02:19:07 INFO     diff complete: major=1 minor=0 identical=False exit=2
+2026-05-18T02:19:07 INFO     HTML report : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s2-value-diff\comparison_report.html
+2026-05-18T02:19:07 INFO     JSON report : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s2-value-diff\comparison_report.json
+2026-05-18T02:19:07 INFO     verdict     : C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox\tests\integration\comparison\examples\s2-value-diff\verdict.json
