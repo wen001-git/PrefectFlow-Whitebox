@@ -1,0 +1,535 @@
+{
+  "date": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "date",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "diff": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00ffc7ce",
+      "fill_type": "solid",
+      "start_color": "00ffc7ce"
+    },
+    "font": {
+      "bold": false,
+      "color": "00df5006",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "diff",
+    "number_format": "General",
+    "role": "overlay"
+  },
+  "float": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "float",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "header": {
+    "alignment": {
+      "horizontal": "center",
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00bccde9",
+      "fill_type": "solid",
+      "start_color": "00bccde9"
+    },
+    "font": {
+      "bold": true,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "header",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "header-diff": {
+    "alignment": {
+      "horizontal": "center",
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00ffc7ce",
+      "fill_type": "solid",
+      "start_color": "00ffc7ce"
+    },
+    "font": {
+      "bold": true,
+      "color": "00df5006",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "header-diff",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "int": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "int",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "money": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "money",
+    "number_format": "$#,##0.00",
+    "role": "primary"
+  },
+  "money-int": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "money-int",
+    "number_format": "$#,##0",
+    "role": "primary"
+  },
+  "percent": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "percent",
+    "number_format": "0.00%",
+    "role": "primary"
+  },
+  "str": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": false,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "str",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "total": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00000000",
+      "fill_type": null,
+      "start_color": "00000000"
+    },
+    "font": {
+      "bold": true,
+      "color": "00000000",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "total",
+    "number_format": "General",
+    "role": "primary"
+  },
+  "warning-grey": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00a5a5a5",
+      "fill_type": "solid",
+      "start_color": "00a5a5a5"
+    },
+    "font": {
+      "bold": false,
+      "color": "00ffffff",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "warning-grey",
+    "number_format": "General",
+    "role": "overlay"
+  },
+  "warning-red": {
+    "alignment": {
+      "horizontal": null,
+      "indent": 0,
+      "vertical": null,
+      "wrap_text": false
+    },
+    "border": {
+      "bottom": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "left": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "right": {
+        "border_style": "thin",
+        "color": "00000000"
+      },
+      "top": {
+        "border_style": "thin",
+        "color": "00000000"
+      }
+    },
+    "fill": {
+      "end_color": "00ffc7ce",
+      "fill_type": "solid",
+      "start_color": "00ffc7ce"
+    },
+    "font": {
+      "bold": false,
+      "color": "00df5006",
+      "italic": false,
+      "name": "ARIAL",
+      "size": 12.0
+    },
+    "name": "warning-red",
+    "number_format": "General",
+    "role": "overlay"
+  }
+}
