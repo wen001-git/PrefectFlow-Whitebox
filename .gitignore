@@ -46,3 +46,11 @@ baselines/**/input_snapshots/csv/
 runs/*
 !runs/.gitkeep
 
+# Next.js frontend (apps/web)
+apps/web/node_modules/
+apps/web/.next/
+apps/web/out/
+apps/web/.env.local
+apps/web/next-env.d.ts
+apps/web/*.tsbuildinfo
+
