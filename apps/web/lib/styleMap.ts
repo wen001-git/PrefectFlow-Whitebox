@@ -29,7 +29,15 @@ export type SemanticStyle =
   | "diff"          // ffc7ce highlight — legacy "differs from baseline"
   | "muted"         // suppressed / informational cell
   | "text"          // plain text cell (default)
-  | "cell";         // structural <td>/<th> baseline (border, padding)
+  | "cell"          // structural <td>/<th> baseline (border, padding)
+  // ----- XLSX-vs-XLSX diff viewer (P2.4 lineage+diff todo) -----
+  // These four are not produced by the renderer; they classify cells
+  // in the side-by-side diff grid (DiffViewer) and follow a standard
+  // green/yellow/red/grey legend.
+  | "diff-identical"  // both sides equal — green
+  | "diff-minor"      // format/type-only delta — yellow
+  | "diff-major"      // value/structural delta — red
+  | "diff-missing";   // present on one side only — grey
 
 const MAP: Record<SemanticStyle, string> = {
   cell: "border border-gray-200 px-2 py-1 text-sm align-top",
@@ -47,6 +55,11 @@ const MAP: Record<SemanticStyle, string> = {
   // browser view matches the eventual XLSX export pixel-for-pixel.
   diff: "bg-[#ffc7ce] text-[#df5006] font-medium",
   muted: "text-gray-400 italic",
+  // Diff-viewer legend (see SemanticStyle comment above).
+  "diff-identical": "bg-green-50 text-green-900",
+  "diff-minor": "bg-yellow-50 text-yellow-900",
+  "diff-major": "bg-red-50 text-red-900 font-medium",
+  "diff-missing": "bg-gray-100 text-gray-500 italic",
 };
 
 export function styleClass(name: SemanticStyle | undefined): string {
