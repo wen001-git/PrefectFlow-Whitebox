@@ -145,3 +145,9 @@ long-term migration target.
 - Preserved: § 4.2 / § 4.4 (long-term ideal); A1-A6 tooling stays
 
 **References**: plan.md § 9; docs/stage2/10.0-validation-strategy.{zh,en}.md
+
+- 2026-05-18 — xlsx_diff uses two openpyxl loads per file (data_only=True for values, data_only=False for formulas+styles) — correctness requires separate reads since openpyxl cannot return both formula string and cached value in a single load.
+
+## 2026-05-18 — Round 2 C4 — comparison orchestrator landed
+
+- **2026-05-18 — compare_validation.py orchestrator shipped (C4)** — `tools/compare_validation.py` provides two subcommands: `compare` (Mode A: manual paths) and `auto` (Mode B: invokes C2+C3 then calls C1 as import). Produces `comparison_report.html` (enriched with run-context banner), `comparison_report.json` (C1 report + both metadata sidecars), `verdict.json` (top-level PASS/MINOR_DIFFS/MAJOR_DIFFS/ERROR with warnings + next-steps), and `comparison_report.log`. Exit codes mirror C1 (0/1/2/3). Auto dry-run prints orchestration plan without executing C2/C3. Calls C1 via module import (faster + better error propagation); C2/C3 via subprocess (isolation + creds). 12 tests under `tests/tools/test_compare_validation.py`. Operator doc: `tools/docs/compare_validation.md`. All 76 tests pass; `stage_doc_checks.py` 24/24 ALIGN OK + 798 citations PASS.

@@ -130,6 +130,19 @@ For the next agent (or me, next turn):
 
 ---
 
+## G2b-LIVE Round 2 status
+
+| Todo | Status | Output |
+|---|---|---|
+| **C1** — XLSX cell-level diff tool | ✅ **done** 2026-05-18 | `tools/xlsx_diff.py`; `tests/tools/test_xlsx_diff.py` (12 tests); `tools/docs/xlsx_diff-help.txt` |
+| **C2** — Legacy MRC runner adapter | ✅ **done** 2026-05-18 | `tools/run_legacy_mrc.py`; `tests/tools/test_run_legacy_mrc.py`; `tools/docs/run_legacy_mrc.md` |
+| **C3** — New-system runner stub | ✅ **done** 2026-05-18 | `tools/run_newsystem_mrc.py`; `tests/tools/test_run_newsystem_mrc.py`; `tools/docs/run_newsystem_mrc.md` |
+| **C4** — Comparison orchestrator CLI | ✅ **done** 2026-05-18 | `tools/compare_validation.py`; `tests/tools/test_compare_validation.py` (12 tests); `tools/docs/compare_validation.md` |
+| **C5** — End-to-end harness validation | ⏳ pending | tbd |
+| **C6** — Validation-strategy doc bilingual | ✅ **done** 2026-05-18 | `docs/stage2/10.0-validation-strategy.{zh,en}.md` |
+
+---
+
 ## Pre-v9.1 history (summarized; full detail in checkpoints)
 
 - **2026-04-25 → 2026-04-30**: Phase 0 bootstrap — frozen.
