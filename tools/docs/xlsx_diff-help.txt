@@ -1,0 +1,24 @@
+Usage: xlsx_diff.py [OPTIONS] LEGACY NEW
+
+  Compare two XLSX files at cell level and report all differences.
+
+  Exit codes:
+    0  identical (no diffs)
+    1  diffs found (minor style/format diffs only)
+    2  major diffs (structure / value / formula / merged cells)
+    3  file/IO error
+
+Options:
+  --json FILE                    Write JSON report to this file.
+  --html FILE                    Write HTML report to this file.
+  --float-tolerance FLOAT        Tolerance for floating-point value
+                                 comparisons.  [default: 0.0]
+  --ignore-style                 Suppress font / fill / border / alignment
+                                 diffs.
+  --ignore-format                Suppress number-format diffs.
+  --ignore-row-heights           Suppress row-height diffs.
+  --max-diffs-per-sheet INTEGER  Stop collecting cell diffs per sheet after
+                                 this many.  [default: 1000]
+  --summary-only                 Print summary table only; omit per-cell diff
+                                 details.
+  --help                         Show this message and exit.
