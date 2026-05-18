@@ -8,7 +8,7 @@ export function Nav() {
         <Link href="/" className="text-blue-600 hover:underline">
           Picker
         </Link>
-        <Link href="/runs/_demo" className="text-blue-600 hover:underline">
+        <Link href="/runs" className="text-blue-600 hover:underline">
           Runs
         </Link>
       </div>
