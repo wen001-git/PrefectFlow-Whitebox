@@ -272,3 +272,10 @@ You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\C
 # Your task: Round 2 C2 — Legacy MRC runner adapter (operator-invoked)
 
 [... full task spec as provided ...]
+
+## 2026-05-18 — Round 2 C5 end-to-end harness
+
+1. You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox`.
+
+# Your task: Round 2 C5 — End-to-end harness validation (THE GATE)
+[... full task spec as provided in session ...]
