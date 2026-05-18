@@ -1,51 +1,47 @@
-"""Run listing / detail router (stub).
+"""Run listing / detail router.
 
-TODO(d-api-contracts): replace fixture data with real registry/engine
-lookups against `runs/` artifacts and the registry metadata.
+Backed by the fixture provider in :mod:`whitebox.api.data.fixtures`.
+The engine / storage wiring lands in a later todo; this router owns
+the public HTTP contract only.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from datetime import date
+from typing import Annotated
 
-from whitebox.api.schemas import RunDetail, RunListResponse, RunSummary
+from fastapi import APIRouter, HTTPException, Query
+
+from whitebox.api.data import fixtures
+from whitebox.api.schemas import Pagination, RunDetail, RunListResponse
 
 router = APIRouter(prefix="/api/v1/runs", tags=["runs"])
 
 
-_FIXTURE_RUNS: list[RunSummary] = [
-    RunSummary(
-        run_id="run_2026_05_18_001",
-        servicer="MRC",
-        remit_date="2026-05-15",
-        status="completed",
-        created_at="2026-05-18T01:23:45Z",
-    ),
-    RunSummary(
-        run_id="run_2026_05_17_002",
-        servicer="MRC",
-        remit_date="2026-05-14",
-        status="completed",
-        created_at="2026-05-17T18:02:11Z",
-    ),
-]
-
-
-@router.get("", response_model=RunListResponse)
-def list_runs() -> RunListResponse:
-    return RunListResponse(runs=_FIXTURE_RUNS, total=len(_FIXTURE_RUNS))
-
-
-@router.get("/{run_id}", response_model=RunDetail)
-def get_run(run_id: str) -> RunDetail:
-    base = _FIXTURE_RUNS[0]
-    return RunDetail(
-        run_id=run_id,
-        servicer=base.servicer,
-        remit_date=base.remit_date,
-        status=base.status,
-        created_at=base.created_at,
-        sheets=["MRC_Summary", "Loan_Detail", "Adjustments", "Exceptions", "Trailer"],
-        validators_passed=11,
-        validators_failed=1,
+@router.get("", response_model=RunListResponse, summary="List runs")
+def list_runs(
+    servicer: Annotated[str | None, Query(description="Filter by servicer id.")] = None,
+    from_date: Annotated[date | None, Query(description="Inclusive lower bound on remit_date.")] = None,
+    to_date: Annotated[date | None, Query(description="Inclusive upper bound on remit_date.")] = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> RunListResponse:
+    runs, total = fixtures.list_runs(
+        servicer=servicer,
+        from_date=from_date,
+        to_date=to_date,
+        limit=limit,
+        offset=offset,
     )
+    return RunListResponse(
+        runs=runs,
+        pagination=Pagination(total=total, limit=limit, offset=offset),
+    )
+
+
+@router.get("/{run_id}", response_model=RunDetail, summary="Get one run")
+def get_run(run_id: str) -> RunDetail:
+    detail = fixtures.get_run(run_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"run {run_id!r} not found")
+    return detail

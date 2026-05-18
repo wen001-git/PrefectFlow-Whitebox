@@ -1,32 +1,31 @@
-"""Run-vs-baseline diff router (stub).
+"""Run-vs-run XLSX diff router.
 
-TODO(d-api-contracts): wrap tools/xlsx_diff.py output.
+Returns the xlsx_diff-shaped report comparing ``run_id`` against
+``against`` (the other run id supplied as a query parameter).
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import Annotated
 
-from whitebox.api.schemas import DiffEntry, DiffResponse
+from fastapi import APIRouter, Query
+
+from whitebox.api.data import fixtures
+from whitebox.api.schemas import DiffResponse
 
 router = APIRouter(prefix="/api/v1/runs", tags=["diff"])
 
 
-@router.get("/{run_id}/diff", response_model=DiffResponse)
-def get_diff(run_id: str, compared_to: str = "baseline") -> DiffResponse:
-    diffs = [
-        DiffEntry(sheet="MRC_Summary", cell="C4", left=1234.56, right=1234.57, kind="value"),
-        DiffEntry(
-            sheet="Loan_Detail",
-            cell="F12",
-            left="current",
-            right="delinquent",
-            kind="value",
-        ),
-    ]
-    return DiffResponse(
-        run_id=run_id,
-        compared_to=compared_to,
-        verdict="MINOR_DIFFS",
-        diffs=diffs,
-    )
+@router.get(
+    "/{run_id}/diff",
+    response_model=DiffResponse,
+    summary="Diff two runs",
+)
+def get_diff(
+    run_id: str,
+    against: Annotated[
+        str,
+        Query(description="Other run id to diff against (or 'baseline')."),
+    ] = "baseline",
+) -> DiffResponse:
+    return fixtures.get_diff(run_id, against)

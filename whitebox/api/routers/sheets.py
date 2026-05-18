@@ -1,32 +1,59 @@
-"""Per-sheet drill-down router (stub).
+"""Per-sheet drill-down router.
 
-TODO(d-api-contracts): wire to whitebox.sheets builders + renderer output.
+Endpoints
+---------
+- ``GET /api/v1/runs/{run_id}/sheets`` — list sheet summaries
+- ``GET /api/v1/runs/{run_id}/sheets/{sheet_name}`` — sheet contents
+- ``GET /api/v1/runs/{run_id}/sheets/{sheet_name}/cells/{cell_ref}`` —
+  one cell with provenance (powers the F1 drill-down panel).
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
-from whitebox.api.schemas import SheetCell, SheetResponse
+from whitebox.api.data import fixtures
+from whitebox.api.schemas import CellDetail, SheetData, SheetListResponse
 
 router = APIRouter(prefix="/api/v1/runs", tags=["sheets"])
 
 
-@router.get("/{run_id}/sheets/{sheet_name}", response_model=SheetResponse)
-def get_sheet(run_id: str, sheet_name: str) -> SheetResponse:
-    columns = ["loan_id", "principal", "interest", "status"]
-    rows = [
-        {"loan_id": "L0001", "principal": 100000.0, "interest": 4500.0, "status": "current"},
-        {"loan_id": "L0002", "principal": 75000.0, "interest": 3100.0, "status": "current"},
-    ]
-    cells = [
-        SheetCell(row=1, col="A", value="L0001"),
-        SheetCell(row=1, col="B", value=100000.0),
-    ]
-    return SheetResponse(
-        run_id=run_id,
-        sheet_name=sheet_name,
-        columns=columns,
-        rows=rows,
-        cells=cells,
-    )
+@router.get(
+    "/{run_id}/sheets",
+    response_model=SheetListResponse,
+    summary="List sheets for a run",
+)
+def list_sheets(run_id: str) -> SheetListResponse:
+    return SheetListResponse(run_id=run_id, sheets=fixtures.list_sheets(run_id))
+
+
+@router.get(
+    "/{run_id}/sheets/{sheet_name}",
+    response_model=SheetData,
+    summary="Get one sheet's contents",
+)
+def get_sheet(run_id: str, sheet_name: str) -> SheetData:
+    data = fixtures.get_sheet(run_id, sheet_name)
+    if data is None:
+        raise HTTPException(
+            status_code=404, detail=f"sheet {sheet_name!r} not found on run {run_id!r}"
+        )
+    return data
+
+
+@router.get(
+    "/{run_id}/sheets/{sheet_name}/cells/{cell_ref}",
+    response_model=CellDetail,
+    summary="Get one cell with provenance",
+)
+def get_cell(run_id: str, sheet_name: str, cell_ref: str) -> CellDetail:
+    detail = fixtures.get_cell(run_id, sheet_name, cell_ref)
+    if detail is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"cell {cell_ref!r} not found on sheet {sheet_name!r} "
+                f"of run {run_id!r}"
+            ),
+        )
+    return detail

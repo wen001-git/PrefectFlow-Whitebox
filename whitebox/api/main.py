@@ -19,9 +19,11 @@ app: FastAPI = FastAPI(
     title="PrefectFlow-Whitebox API",
     version=__version__,
     description=(
-        "Skeleton API for the whitebox re-implementation of remit_validation. "
-        "All business endpoints currently return fixture data; real wiring is "
-        "scheduled for the d-api-contracts todo."
+        "Whitebox re-implementation of remit_validation. Stage 2 / P2.3: "
+        "production typed contracts served from a fixture provider in "
+        "whitebox.api.data.fixtures; engine + storage wiring lands in later "
+        "todos. The OpenAPI surface and pydantic schemas are stable from "
+        "this PR onward."
     ),
     openapi_url="/openapi.json",
 )

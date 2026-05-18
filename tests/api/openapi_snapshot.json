@@ -1,0 +1,1599 @@
+{
+  "components": {
+    "schemas": {
+      "CellDetail": {
+        "additionalProperties": false,
+        "description": "Body of ``GET /runs/{run_id}/sheets/{sheet_name}/cells/{cell_ref}``.\n\nPowers the F1 cell drill-down panel\n(``6.0-ui-architecture.en.md`` \u00a7 3.2).",
+        "properties": {
+          "cell": {
+            "$ref": "#/components/schemas/SheetCell"
+          },
+          "computed_expression": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Human-readable formula, e.g. ``adv_curr - adv_prev``.",
+            "title": "Computed Expression"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/CellProvenance"
+            },
+            "title": "Provenance",
+            "type": "array"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sheet_name": {
+            "title": "Sheet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "sheet_name",
+          "cell"
+        ],
+        "title": "CellDetail",
+        "type": "object"
+      },
+      "CellProvenance": {
+        "additionalProperties": false,
+        "description": "One step in the raw \u2192 transform \u2192 validator \u2192 cell chain.\n\nCross-ref: ``3.0-data-model.en.md`` \u00a7 4.1.",
+        "properties": {
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LineageNodeKind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "CellProvenance",
+        "type": "object"
+      },
+      "DiffCell": {
+        "additionalProperties": false,
+        "description": "One differing cell in an XLSX-vs-XLSX diff.\n\n[legacy: a row in the ``diffs`` array produced by\n``tools/xlsx_diff.py``.]",
+        "properties": {
+          "cell_ref": {
+            "examples": [
+              "C4"
+            ],
+            "title": "Cell Ref",
+            "type": "string"
+          },
+          "column_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DiffKind"
+          },
+          "left": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left"
+          },
+          "right": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Right"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "cell_ref",
+          "kind"
+        ],
+        "title": "DiffCell",
+        "type": "object"
+      },
+      "DiffKind": {
+        "description": "Categorical reason a cell was reported as different.",
+        "enum": [
+          "value",
+          "missing_left",
+          "missing_right",
+          "type",
+          "format"
+        ],
+        "title": "DiffKind",
+        "type": "string"
+      },
+      "DiffResponse": {
+        "additionalProperties": false,
+        "description": "Body of ``GET /runs/{run_id}/diff``.\n\nMirrors the JSON envelope of ``tools/xlsx_diff.py`` so the engine\ntodo can wire one-to-one.",
+        "properties": {
+          "compared_to": {
+            "description": "The other run id this was diffed against.",
+            "title": "Compared To",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/SheetDiff"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
+          "total_cells_changed": {
+            "minimum": 0.0,
+            "title": "Total Cells Changed",
+            "type": "integer"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/DiffVerdict"
+          }
+        },
+        "required": [
+          "run_id",
+          "compared_to",
+          "verdict",
+          "total_cells_changed",
+          "sheets"
+        ],
+        "title": "DiffResponse",
+        "type": "object"
+      },
+      "DiffVerdict": {
+        "description": "Verdict tier produced by ``tools/xlsx_diff.py``.\n\nMirrors ``docs/stage2/11.0-architecture.en.md`` \u00a7 6.",
+        "enum": [
+          "PASS",
+          "MINOR_DIFFS",
+          "MAJOR_DIFFS",
+          "ERROR"
+        ],
+        "title": "DiffVerdict",
+        "type": "string"
+      },
+      "ErrorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "examples": [
+              "NOT_IMPLEMENTED"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "ExportResponse": {
+        "additionalProperties": false,
+        "description": "Body returned by ``GET /runs/{run_id}/export`` once wired.\n\nUntil then ``GET /runs/{run_id}/export`` returns 501 +\n:class:`ErrorResponse`; this schema is declared so the OpenAPI\nsurface advertises the eventual contract.",
+        "properties": {
+          "byte_size": {
+            "minimum": 0.0,
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "download_url": {
+            "title": "Download Url",
+            "type": "string"
+          },
+          "format": {
+            "const": "xlsx",
+            "default": "xlsx",
+            "title": "Format",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "download_url",
+          "byte_size",
+          "sha256"
+        ],
+        "title": "ExportResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "const": "ok",
+            "examples": [
+              "ok"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "examples": [
+              "0.0.1"
+            ],
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "LineageEdge": {
+        "additionalProperties": false,
+        "description": "react-flow-shaped edge.\n\n``id`` / ``source`` / ``target`` are the three react-flow-required\nfields; ``relation`` is our domain taxonomy.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "relation": {
+            "$ref": "#/components/schemas/LineageEdgeRelation"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "target",
+          "relation"
+        ],
+        "title": "LineageEdge",
+        "type": "object"
+      },
+      "LineageEdgeRelation": {
+        "description": "Edge taxonomy on the lineage graph.",
+        "enum": [
+          "reads",
+          "writes",
+          "derives"
+        ],
+        "title": "LineageEdgeRelation",
+        "type": "string"
+      },
+      "LineageField": {
+        "additionalProperties": false,
+        "description": "One row in the lineage-known fields catalog.",
+        "properties": {
+          "field_id": {
+            "title": "Field Id",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "title": "Label",
+            "type": "string"
+          },
+          "servicer": {
+            "title": "Servicer",
+            "type": "string"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field_id",
+          "servicer",
+          "sheet"
+        ],
+        "title": "LineageField",
+        "type": "object"
+      },
+      "LineageFieldListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/LineageField"
+            },
+            "title": "Fields",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "title": "LineageFieldListResponse",
+        "type": "object"
+      },
+      "LineageGraph": {
+        "additionalProperties": false,
+        "description": "Body of ``GET /lineage/fields/{field_id}``.\n\nReturns both *backward* (sources feeding this field) and *forward*\n(downstream consumers) lineage merged into a single graph.",
+        "properties": {
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/LineageEdge"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "field_id": {
+            "title": "Field Id",
+            "type": "string"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/LineageNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "field_id",
+          "nodes",
+          "edges"
+        ],
+        "title": "LineageGraph",
+        "type": "object"
+      },
+      "LineageNode": {
+        "additionalProperties": false,
+        "description": "react-flow-shaped node (``id`` / ``type`` / ``data`` / ``position``).\n\nThe ``type`` field uses our domain taxonomy; the FE maps it to a\ncustom react-flow node type for shape / colour rendering.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LineageNodeData"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LineagePosition"
+          },
+          "type": {
+            "$ref": "#/components/schemas/LineageNodeKind"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "data",
+          "position"
+        ],
+        "title": "LineageNode",
+        "type": "object"
+      },
+      "LineageNodeData": {
+        "additionalProperties": false,
+        "description": "``data`` payload for a react-flow node.",
+        "properties": {
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "LineageNodeData",
+        "type": "object"
+      },
+      "LineageNodeKind": {
+        "description": "Node taxonomy on the lineage graph.\n\nAligned with ``docs/stage2/3.0-data-model.en.md`` \u00a7 4.1 (raw \u2192 CTE \u2192\nvalidator \u2192 sheet cell chain). The FE renders different shapes /\ncolours per kind.",
+        "enum": [
+          "source",
+          "transform",
+          "validator",
+          "sheet",
+          "field"
+        ],
+        "title": "LineageNodeKind",
+        "type": "string"
+      },
+      "LineagePosition": {
+        "additionalProperties": false,
+        "description": "``position`` payload for a react-flow node.",
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "LineagePosition",
+        "type": "object"
+      },
+      "Pagination": {
+        "additionalProperties": false,
+        "description": "Standard pagination envelope used by every list endpoint.",
+        "properties": {
+          "limit": {
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total matching rows across all pages.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Pagination",
+        "type": "object"
+      },
+      "RunDetail": {
+        "additionalProperties": false,
+        "description": "Full run record returned by ``GET /runs/{run_id}``.\n\nExtends :class:`RunSummary` with per-sheet stats and the diff\nverdict against the run's pinned baseline.",
+        "properties": {
+          "baseline_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Baseline run id this run was compared against, if any.",
+            "title": "Baseline Run Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "remit_date": {
+            "description": "Logical remit cycle date for the run.",
+            "format": "date",
+            "title": "Remit Date",
+            "type": "string"
+          },
+          "run_id": {
+            "examples": [
+              "run_2026_05_18_001"
+            ],
+            "title": "Run Id",
+            "type": "string"
+          },
+          "servicer": {
+            "description": "Registry servicer id.",
+            "examples": [
+              "MRC"
+            ],
+            "title": "Servicer",
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/SheetSummary"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          },
+          "validators_failed": {
+            "minimum": 0.0,
+            "title": "Validators Failed",
+            "type": "integer"
+          },
+          "validators_passed": {
+            "minimum": 0.0,
+            "title": "Validators Passed",
+            "type": "integer"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/DiffVerdict"
+          }
+        },
+        "required": [
+          "run_id",
+          "servicer",
+          "remit_date",
+          "status",
+          "created_at",
+          "validators_passed",
+          "validators_failed",
+          "verdict"
+        ],
+        "title": "RunDetail",
+        "type": "object"
+      },
+      "RunListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunSummary"
+            },
+            "title": "Runs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "runs",
+          "pagination"
+        ],
+        "title": "RunListResponse",
+        "type": "object"
+      },
+      "RunStatus": {
+        "description": "Lifecycle state of a validation run.",
+        "enum": [
+          "pending",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "title": "RunStatus",
+        "type": "string"
+      },
+      "RunSummary": {
+        "additionalProperties": false,
+        "description": "One row in the ``GET /runs`` listing.\n\n[legacy: there is no XLSX column for run metadata \u2014 runs are new in\nStage 2; ``servicer`` / ``remit_date`` map to the discriminators on\n``MrcRemitFrame`` (data-model \u00a7 2.4).]",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "remit_date": {
+            "description": "Logical remit cycle date for the run.",
+            "format": "date",
+            "title": "Remit Date",
+            "type": "string"
+          },
+          "run_id": {
+            "examples": [
+              "run_2026_05_18_001"
+            ],
+            "title": "Run Id",
+            "type": "string"
+          },
+          "servicer": {
+            "description": "Registry servicer id.",
+            "examples": [
+              "MRC"
+            ],
+            "title": "Servicer",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RunStatus"
+          },
+          "validators_failed": {
+            "minimum": 0.0,
+            "title": "Validators Failed",
+            "type": "integer"
+          },
+          "validators_passed": {
+            "minimum": 0.0,
+            "title": "Validators Passed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "run_id",
+          "servicer",
+          "remit_date",
+          "status",
+          "created_at",
+          "validators_passed",
+          "validators_failed"
+        ],
+        "title": "RunSummary",
+        "type": "object"
+      },
+      "SheetCell": {
+        "additionalProperties": false,
+        "description": "One sheet cell with optional provenance.\n\n[legacy: maps to a ``(row, col)`` coordinate in the openpyxl\nworkbook; ``cell_ref`` uses A1 notation (``\"C4\"``).]",
+        "properties": {
+          "cell_ref": {
+            "description": "A1 notation.",
+            "examples": [
+              "C4"
+            ],
+            "title": "Cell Ref",
+            "type": "string"
+          },
+          "column_id": {
+            "title": "Column Id",
+            "type": "string"
+          },
+          "is_highlight": {
+            "default": false,
+            "title": "Is Highlight",
+            "type": "boolean"
+          },
+          "row": {
+            "description": "1-based row index, matching openpyxl.",
+            "minimum": 1.0,
+            "title": "Row",
+            "type": "integer"
+          },
+          "validator_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Validator that produced/inspected this cell, if any.",
+            "title": "Validator Id"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "row",
+          "column_id",
+          "cell_ref"
+        ],
+        "title": "SheetCell",
+        "type": "object"
+      },
+      "SheetColumn": {
+        "additionalProperties": false,
+        "description": "Column descriptor for ``SheetData``.\n\n[legacy: ``id`` is the snake_case column name on the underlying\npandas frame; ``label`` is the header text written into the XLSX.\nSee ``whitebox.transform.models`` for the canonical column tuples.]",
+        "properties": {
+          "dtype": {
+            "default": "string",
+            "enum": [
+              "string",
+              "number",
+              "integer",
+              "boolean",
+              "date"
+            ],
+            "title": "Dtype",
+            "type": "string"
+          },
+          "id": {
+            "examples": [
+              "diff_adv_bal"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "is_highlight": {
+            "default": false,
+            "description": "True if this column participates in the highlight rule set.",
+            "title": "Is Highlight",
+            "type": "boolean"
+          },
+          "label": {
+            "examples": [
+              "\u0394 Advance Balance"
+            ],
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "SheetColumn",
+        "type": "object"
+      },
+      "SheetData": {
+        "additionalProperties": false,
+        "description": "Body of ``GET /runs/{run_id}/sheets/{sheet_name}``.\n\n[legacy: this is the JSON shape of one openpyxl worksheet \u2014 column\nlist + rows + the subset of cells that carry highlighting.]",
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/SheetColumn"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "highlighted_cells": {
+            "items": {
+              "$ref": "#/components/schemas/SheetCell"
+            },
+            "title": "Highlighted Cells",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SheetRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sheet_name": {
+            "title": "Sheet Name",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "sheet_name",
+          "columns",
+          "rows"
+        ],
+        "title": "SheetData",
+        "type": "object"
+      },
+      "SheetDiff": {
+        "additionalProperties": false,
+        "description": "Per-sheet bucket of differing cells.",
+        "properties": {
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/DiffCell"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "cells_changed": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Cells Changed",
+            "type": "integer"
+          },
+          "rows_added": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Rows Added",
+            "type": "integer"
+          },
+          "rows_removed": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Rows Removed",
+            "type": "integer"
+          },
+          "sheet_name": {
+            "title": "Sheet Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet_name"
+        ],
+        "title": "SheetDiff",
+        "type": "object"
+      },
+      "SheetListResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/SheetSummary"
+            },
+            "title": "Sheets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "run_id",
+          "sheets"
+        ],
+        "title": "SheetListResponse",
+        "type": "object"
+      },
+      "SheetRow": {
+        "additionalProperties": false,
+        "description": "One sheet row as a column-id \u2192 value mapping.",
+        "properties": {
+          "row_index": {
+            "minimum": 1.0,
+            "title": "Row Index",
+            "type": "integer"
+          },
+          "values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "row_index",
+          "values"
+        ],
+        "title": "SheetRow",
+        "type": "object"
+      },
+      "SheetSummary": {
+        "additionalProperties": false,
+        "description": "Aggregated per-sheet stats shown on the run-detail page.\n\n[legacy: ``row_count`` matches the row count emitted by the\nper-sheet builder (``whitebox.sheets.<sheet>``); ``highlight_count``\nmatches the count of ``ffc7ce``-shaded cells in the legacy XLSX\n(1.6-baseline.en.md \u00a7 3).]",
+        "properties": {
+          "column_count": {
+            "minimum": 0.0,
+            "title": "Column Count",
+            "type": "integer"
+          },
+          "highlight_count": {
+            "minimum": 0.0,
+            "title": "Highlight Count",
+            "type": "integer"
+          },
+          "row_count": {
+            "minimum": 0.0,
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sheet_name": {
+            "examples": [
+              "MRC_Advance_Check"
+            ],
+            "title": "Sheet Name",
+            "type": "string"
+          },
+          "tab_order": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Tab Order",
+            "type": "integer"
+          },
+          "title": {
+            "default": "",
+            "description": "Human-readable tab title.",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet_name",
+          "row_count",
+          "column_count",
+          "highlight_count"
+        ],
+        "title": "SheetSummary",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Whitebox re-implementation of remit_validation. Stage 2 / P2.3: production typed contracts served from a fixture provider in whitebox.api.data.fixtures; engine + storage wiring lands in later todos. The OpenAPI surface and pydantic schemas are stable from this PR onward.",
+    "title": "PrefectFlow-Whitebox API",
+    "version": "0.0.1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/lineage/fields": {
+      "get": {
+        "operationId": "list_fields_api_v1_lineage_fields_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageFieldListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List lineage-known fields",
+        "tags": [
+          "lineage"
+        ]
+      }
+    },
+    "/api/v1/lineage/fields/{field_id}": {
+      "get": {
+        "operationId": "get_field_lineage_api_v1_lineage_fields__field_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "field_id",
+            "required": true,
+            "schema": {
+              "title": "Field Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageGraph"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Backward + forward lineage for one field",
+        "tags": [
+          "lineage"
+        ]
+      }
+    },
+    "/api/v1/runs": {
+      "get": {
+        "operationId": "list_runs_api_v1_runs_get",
+        "parameters": [
+          {
+            "description": "Filter by servicer id.",
+            "in": "query",
+            "name": "servicer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by servicer id.",
+              "title": "Servicer"
+            }
+          },
+          {
+            "description": "Inclusive lower bound on remit_date.",
+            "in": "query",
+            "name": "from_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive lower bound on remit_date.",
+              "title": "From Date"
+            }
+          },
+          {
+            "description": "Inclusive upper bound on remit_date.",
+            "in": "query",
+            "name": "to_date",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive upper bound on remit_date.",
+              "title": "To Date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List runs",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "get": {
+        "operationId": "get_run_api_v1_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get one run",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}/diff": {
+      "get": {
+        "operationId": "get_diff_api_v1_runs__run_id__diff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Other run id to diff against (or 'baseline').",
+            "in": "query",
+            "name": "against",
+            "required": false,
+            "schema": {
+              "default": "baseline",
+              "description": "Other run id to diff against (or 'baseline').",
+              "title": "Against",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiffResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Diff two runs",
+        "tags": [
+          "diff"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}/export": {
+      "get": {
+        "operationId": "export_run_api_v1_runs__run_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "const": "xlsx",
+              "default": "xlsx",
+              "title": "Format",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          }
+        },
+        "summary": "Export a run as XLSX",
+        "tags": [
+          "export"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}/sheets": {
+      "get": {
+        "operationId": "list_sheets_api_v1_runs__run_id__sheets_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List sheets for a run",
+        "tags": [
+          "sheets"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}/sheets/{sheet_name}": {
+      "get": {
+        "operationId": "get_sheet_api_v1_runs__run_id__sheets__sheet_name__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sheet_name",
+            "required": true,
+            "schema": {
+              "title": "Sheet Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SheetData"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get one sheet's contents",
+        "tags": [
+          "sheets"
+        ]
+      }
+    },
+    "/api/v1/runs/{run_id}/sheets/{sheet_name}/cells/{cell_ref}": {
+      "get": {
+        "operationId": "get_cell_api_v1_runs__run_id__sheets__sheet_name__cells__cell_ref__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sheet_name",
+            "required": true,
+            "schema": {
+              "title": "Sheet Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cell_ref",
+            "required": true,
+            "schema": {
+              "title": "Cell Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CellDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get one cell with provenance",
+        "tags": [
+          "sheets"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

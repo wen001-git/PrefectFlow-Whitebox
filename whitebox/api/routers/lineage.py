@@ -1,26 +1,35 @@
-"""Field-lineage router (stub).
+"""Field-lineage router.
 
-TODO(d-api-contracts): build from registry metadata + validator graph.
+Endpoints
+---------
+- ``GET /api/v1/lineage/fields`` — list lineage-known output fields.
+- ``GET /api/v1/lineage/fields/{field_id}`` — backward + forward
+  lineage graph in react-flow node/edge shape.
 """
 
 from __future__ import annotations
 
 from fastapi import APIRouter
 
-from whitebox.api.schemas import LineageEdge, LineageNode, LineageResponse
+from whitebox.api.data import fixtures
+from whitebox.api.schemas import LineageFieldListResponse, LineageGraph
 
 router = APIRouter(prefix="/api/v1/lineage", tags=["lineage"])
 
 
-@router.get("/{field_id}", response_model=LineageResponse)
-def get_lineage(field_id: str) -> LineageResponse:
-    nodes = [
-        LineageNode(id="src.loan_balance", kind="source", label="loan_balance"),
-        LineageNode(id="cte.normalize", kind="transform", label="normalize_balance"),
-        LineageNode(id=field_id, kind="output", label=field_id),
-    ]
-    edges = [
-        LineageEdge(source="src.loan_balance", target="cte.normalize", relation="reads"),
-        LineageEdge(source="cte.normalize", target=field_id, relation="writes"),
-    ]
-    return LineageResponse(field_id=field_id, nodes=nodes, edges=edges)
+@router.get(
+    "/fields",
+    response_model=LineageFieldListResponse,
+    summary="List lineage-known fields",
+)
+def list_fields() -> LineageFieldListResponse:
+    return LineageFieldListResponse(fields=fixtures.list_lineage_fields())
+
+
+@router.get(
+    "/fields/{field_id}",
+    response_model=LineageGraph,
+    summary="Backward + forward lineage for one field",
+)
+def get_field_lineage(field_id: str) -> LineageGraph:
+    return fixtures.get_lineage(field_id)
