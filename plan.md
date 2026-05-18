@@ -350,3 +350,54 @@ moving the 4 polished chapters into `_archived/`.
 
 Full per-checkpoint history:
 `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\checkpoints\`.
+
+
+---
+
+## 11. Round 3 wave-2 + closure — 2026-05-18
+
+**Status**: 12 / 12 d-* todos = DONE. 4 of the original 7 stage2-mrc-* tasks are now effectively delivered by the d-* foundation; 3 remain for P2.5.
+
+### Commits landed (wave order)
+| Commit | Todo | Description |
+|---|---|---|
+| 95d289d | (round-2 fix) | commit missing tools/xlsx_diff.py + tests + help (Round 2 had wrong commit content) |
+| ec862b | d-arch-freeze + d-pr-evidence-rule | architecture freeze, openpyxl==3.1.5 pin, PR evidence rule |
+| 998ddb | d-cte-harness-impl | DuckDB-based local CTE replay harness |
+|  da9108 | d-registry-impl | 4 registries (validator/sheet/servicer/dataset) + dispatch |
+| 43bf4c8 | d-nextjs-skel | Next.js 14 App Router skeleton (HARD restraint, no extra deps) |
+|  d8fbfa | d-transform-impl | pure transformation layer (no IO) |
+| 5074f40 | d-fastapi-skel | FastAPI skeleton with stub routers |
+| 96fce8b | d-sheets-impl | 5 MRC sheet builders (Summary/General/Advance/ServiceFee/Adv_Info) |
+| 6416cf6 | d-api-contracts | production pydantic schemas + 10 endpoints + FE type mirror |
+| 4f68c3f | d-ui-core-screens | picker/runs/detail/sheet drill-down + cell panel |
+| b2ea64 | d-renderer-pin | XLSX renderer + golden style snapshot + cell-identity smoke PASS |
+| 2e659b2 | d-ui-drill-down-impl | lineage graph + XLSX diff viewer |
+
+### Test totals at closure
+- Backend: **249 passed** (full pytest suite)
+- Frontend: **npm run build OK**, 7 routes, zero new deps
+- Cell-identity smoke (renderer self-render): **identical** (0 major / 0 minor)
+
+### Restraint compliance
+- openpyxl pin **==3.1.5** held
+- Zero new FE deps beyond Next.js + React + Tailwind + reactflow
+- Zero new backend top-level deps; only [api] optional extras added
+
+### Effective coverage of original v9.1 stage2-mrc-* todos
+| Original todo | Effective coverage now |
+|---|---|
+| `stage2-mrc-ingestion` | d-cte-harness-impl + d-transform-impl (full path via DuckDB or live Redshift) |
+| `stage2-mrc-api` | d-fastapi-skel + d-api-contracts (10 endpoints typed; fixture-backed pending engine) |
+| `stage2-mrc-ui-impl` | d-nextjs-skel + d-ui-core-screens + d-ui-drill-down-impl (7 routes complete) |
+| `stage2-mrc-xlsx-renderer` | d-renderer-pin (5-sheet self-render cell-identity PASS) |
+
+### Remaining for P2.5
+- `stage2-mrc-engine` — orchestration: ingestion -> transform -> validators -> sheets -> renderer; wires the 12 d-* pieces into an end-to-end pipeline producing real XLSX
+- `stage2-mrc-cell-identity-harness` — full legacy-vs-new comparison via tools/compare_validation.py auto (blocked from full execution until G2a unblocks or a baseline XLSX is captured manually)
+- `stage2-mrc-acceptance` — sign-off
+
+### Decisions taken during Round 3 (recorded in decisions.md)
+- openpyxl pinned to 3.1.5 with bump policy gated on ADR + cell-identity re-verification
+- FE: Next.js + Tailwind only; new deps require ADR
+- PR evidence rule enforced via .github/PULL_REQUEST_TEMPLATE.md
