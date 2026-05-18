@@ -283,6 +283,38 @@ legend rule still apply to every diagram introduced under § 6.10.
 textual explanation for a diagram, is a **P0 failure** in the
 end-of-stage check and blocks marking the stage `done`.
 
+## 6.15 v9.1 MRC acceptance gate (mandatory)
+
+The v9.1 cell-identity acceptance gate (P2.5
+`stage2-mrc-cell-identity-harness`) is the single authority on
+whether a Stage 2 change is allowed into `main`. It has two
+equivalent surfaces:
+
+1. **Pytest tier** — `tests/acceptance/mrc/` (7 test modules + a
+   conftest). Always runs in CI on every PR.
+2. **CLI tier** — `tools/acceptance_gate.py`. Used by CI for the
+   "full" job on `main` push and by operators locally. Produces
+   `acceptance_verdict.json` + `acceptance_report.md` + per-mode diff
+   artefacts under the chosen `--output` directory.
+
+The gate has three modes — self-consistency (always on, the FLOOR),
+baseline diff (when `baselines/mrc/<date>/validation_report.xlsx`
+present), live legacy diff (when `ACCEPTANCE_LEGACY_LIVE=1` + Vault
+creds). MAJOR diff dimensions (`value` / `formula` / `merged_cells` /
+`structure`) are **never** allowlistable. MINOR diffs may be
+allowlisted only via a JSON entry referencing an ADR in
+`decisions.md`.
+
+Verdict + exit code vocabulary: `PASS=0`, `MINOR_DIFFS=1`,
+`MAJOR_DIFFS=2`, `ERROR=3`, `SKIPPED=4` (only when self-consistency
+itself could not run). The CLI exit code IS the gate signal.
+
+Full reference: `docs/stage2/12.0-acceptance-gate.en.md`.
+Capture procedure for the baseline XLSX:
+`baselines/mrc/2026-04-30/CAPTURE_INSTRUCTIONS.md`.
+
+---
+
 ## 6.11 Living Stage 1 docs + 3-tier behavior marker (mandatory)
 
 User decision 2026-05-17 (G1 sign-off): MRC Stage 1 chapters

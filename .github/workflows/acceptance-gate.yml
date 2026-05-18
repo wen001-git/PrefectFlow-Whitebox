@@ -1,0 +1,140 @@
+name: acceptance-gate
+
+# v9.1 MRC cell-identity acceptance gate
+# See: docs/stage2/12.0-acceptance-gate.en.md
+
+on:
+  pull_request:
+    paths:
+      - "whitebox/**"
+      - "tools/acceptance_gate.py"
+      - "tools/xlsx_diff.py"
+      - "tools/run_legacy_mrc.py"
+      - "tools/run_newsystem_mrc.py"
+      - "tests/acceptance/**"
+      - "baselines/mrc/**"
+      - ".github/workflows/acceptance-gate.yml"
+      - "pyproject.toml"
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      legacy_mode:
+        description: "Legacy comparison mode"
+        required: true
+        default: "skip"
+        type: choice
+        options: [skip, dry-run, live]
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Always-on tier: self-consistency + structural invariants + (if a
+  # baseline file is committed under baselines/mrc/) baseline diff.
+  # This runs on every PR.
+  # ---------------------------------------------------------------------
+  self-consistency:
+    name: Self-consistency + structural invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install uv
+        run: pip install uv
+      - name: Install project (dev + api extras)
+        run: uv sync --extra api
+      - name: Run acceptance harness (pytest tier)
+        run: |
+          uv run pytest tests/acceptance -v
+      - name: Run acceptance gate CLI (self-consistency only)
+        run: |
+          uv run python tools/acceptance_gate.py \
+            --servicer MRC \
+            --remit-date 2026-04-30 \
+            --legacy-mode skip \
+            --output runs/ci-acceptance-self/
+      - name: Upload acceptance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-self-consistency
+          path: runs/ci-acceptance-self/
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------
+  # Full tier (main only): adds baseline diff when the baseline file
+  # exists, and the live-legacy diff when the workflow is dispatched
+  # manually with secrets configured.
+  #
+  # Required repository secrets (declared but not hardcoded):
+  #   VAULT_ADDR            — HashiCorp Vault URL (e.g. https://vault.example.com)
+  #   VAULT_TOKEN           — Vault token with Redshift read perms
+  #   ACCEPTANCE_LEGACY_REPO_PATH (env) — optional override for sibling repo
+  # ---------------------------------------------------------------------
+  full-gate:
+    name: Full acceptance gate (baseline + optional legacy live)
+    if: >
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: self-consistency
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install uv
+        run: pip install uv
+      - name: Install project (dev + api extras)
+        run: uv sync --extra api
+
+      - name: Detect baseline XLSX
+        id: detect_baseline
+        run: |
+          if [ -f baselines/mrc/2026-04-30/validation_report.xlsx ]; then
+            echo "present=1" >> "$GITHUB_OUTPUT"
+            echo "::notice::Baseline XLSX present — full diff will run"
+          else
+            echo "present=0" >> "$GITHUB_OUTPUT"
+            echo "::notice::Baseline XLSX absent — diff component will be SKIPPED"
+          fi
+
+      - name: Run acceptance gate (with baseline + dry-run legacy)
+        env:
+          # Live legacy run only enabled by manual dispatch
+          ACCEPTANCE_LEGACY_LIVE: "${{ github.event.inputs.legacy_mode == 'live' && '1' || '0' }}"
+          VAULT_ADDR: "${{ secrets.VAULT_ADDR }}"
+          VAULT_TOKEN: "${{ secrets.VAULT_TOKEN }}"
+        run: |
+          BASELINE_ARG=""
+          if [ "${{ steps.detect_baseline.outputs.present }}" = "1" ]; then
+            BASELINE_ARG="--baseline baselines/mrc/2026-04-30/validation_report.xlsx"
+          fi
+          LEGACY_MODE="${{ github.event.inputs.legacy_mode || 'dry-run' }}"
+          uv run python tools/acceptance_gate.py \
+            --servicer MRC \
+            --remit-date 2026-04-30 \
+            $BASELINE_ARG \
+            --legacy-mode "$LEGACY_MODE" \
+            --output runs/ci-acceptance-full/
+
+      - name: Upload acceptance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-full-gate
+          path: runs/ci-acceptance-full/
+          if-no-files-found: warn
+
+      - name: Print verdict summary
+        if: always()
+        run: |
+          if [ -f runs/ci-acceptance-full/acceptance_verdict.json ]; then
+            echo "::group::acceptance_verdict.json"
+            cat runs/ci-acceptance-full/acceptance_verdict.json
+            echo "::endgroup::"
+          fi

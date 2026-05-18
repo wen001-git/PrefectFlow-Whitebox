@@ -174,3 +174,17 @@ For full per-checkpoint history see
 - Tests: `tests/engine/` (5 files, 20 tests). Full suite 269 passed (249 baseline + 20). mypy strict on 61 source files passes. ruff clean on all new code.
 - Smoke (Part F): two CLI runs → `tools/compare_validation.py compare` → `runs/p25-engine-smoke/compare/verdict.json` = **PASS** (cell-identical, 0 major / 0 minor across all 5 sheets). Engine renderer confirmed deterministic.
 - Run id: `run_mrc_2026-04-30_cte-harness_2a270dc6`.
+
+---
+
+## 2026-05-18 — P2.5 `stage2-mrc-cell-identity-harness` delivered (acceptance gate)
+
+- New `tests/acceptance/mrc/` package (7 modules + conftest): self-consistency, baseline-diff, legacy-live-diff, per-sheet invariants, renderer determinism, meta-test acceptance gate. 18 PASS + 2 ENV-SKIP (baseline absent + legacy-live absent) on local run.
+- New `tools/acceptance_gate.py` CLI: 3 modes (skip / dry-run / live), produces `acceptance_verdict.json` + `acceptance_report.md` + per-mode diff artefacts. 12 unit tests in `tests/tools/test_acceptance_gate.py`.
+- New `tests/acceptance/mrc/acceptance_minor_diffs_allowlist.json` (empty array, schema in `allowlist_schema.md`).
+- New `baselines/mrc/2026-04-30/CAPTURE_INSTRUCTIONS.md` operator runbook for the day G2a unblocks.
+- New `.github/workflows/acceptance-gate.yml` CI hook (self-consistency on every PR; full gate on `main` push + `workflow_dispatch`).
+- New `docs/stage2/12.0-acceptance-gate.en.md`.
+- Updated `decisions.md` (acceptance-gate-policy entry) and `AGENTS.md` (§ 6.15 new section).
+- Smoke verdict (`--legacy-mode skip`): **PASS**, exit 0; self-consistency PASS 0/0; baseline + legacy SKIPPED with documented reasons.
+- Full pytest suite: **299 passed** (was 269 baseline + 30 new = 18 acceptance + 12 CLI).
