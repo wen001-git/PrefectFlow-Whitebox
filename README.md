@@ -1,17 +1,29 @@
 # PrefectFlow-Whitebox
 
-> Bilingual / 双语 · Stage 1 in progress
+> Bilingual / 双语 · **v9.1 ACCEPTED — Stage 2 development baseline (MRC)**
+
+## Status (2026-05-18)
+
+- ✅ **Stage 1 (MRC chapters 1.0–1.6)** — living docs, provisionally approved
+- ✅ **Stage 2 v9.1 (MRC) — ACCEPTED as development baseline**
+  - Sign-off: `docs/stage2/13.0-v9.1-acceptance-signoff.en.md` (+ `.zh.md`)
+  - Acceptance gate `verdict=PASS` (self-consistency 0/0 across 5 MRC sheets)
+  - 299 backend tests passing + 2 documented ENV-SKIP; `npm run build` green
+  - Conditions for production cutover and known gaps: see sign-off § 7 / § 9
+- ⏳ **v9.2+** — real validator logic, lineage emission, XLSX export streaming,
+  Carrington / Arvest / CC5 / Selene / SLS / Shellpoint onboarding (incremental
+  via the servicer registry)
 
 ## EN
 
 **Purpose.** Reverse-engineer the existing **Validation Report** pipeline in
 `C:\Users\jli\MyData\Copilot\PrefectFlow` and ship a complete, source-cited
 whitebox documentation of how every Excel sheet, every field, and every
-validation rule is produced. Stage 1 is **pure prose docs** (no new code,
-no technology choices). Stage 2 — a new interactive whitebox system — is
-gated on Stage 1 user approval.
+validation rule is produced, then deliver an MRC validation system that is
+cell-identical to the legacy XLSX with an interactive UI.
 
-**Status.** Stage 1 in progress.
+**Status.** Stage 1 MRC chapters live; Stage 2 v9.1 ACCEPTED as MRC
+development baseline (see Status above).
 
 - ✅ `stage1-toc` — Table of contents (zh + en)
 - ✅ `stage1-overall-flow` — Chapter 1.1, end-to-end flow with 6 inline workflow/dataflow diagrams

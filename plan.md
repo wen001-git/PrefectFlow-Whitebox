@@ -401,3 +401,97 @@ Full per-checkpoint history:
 - openpyxl pinned to 3.1.5 with bump policy gated on ADR + cell-identity re-verification
 - FE: Next.js + Tailwind only; new deps require ADR
 - PR evidence rule enforced via .github/PULL_REQUEST_TEMPLATE.md
+
+
+---
+
+## 12. Round 3 complete — v9.1 acceptance signed off — 2026-05-18
+
+**Status**: P2.5 `stage2-mrc-acceptance` DONE. Round 3 closed.
+Sign-off authority: `docs/stage2/13.0-v9.1-acceptance-signoff.en.md`
+(+ `.zh.md` mirror).
+
+### 12.1 Final Round 3 commit table (chronological)
+
+| # | Commit | Todo / role |
+|---|---|---|
+| 1 | `95d289d` | (round-2 fix) commit missing `tools/xlsx_diff.py` + tests + help |
+| 2 | `aec862b` | P2.0 `d-arch-freeze` + `d-pr-evidence-rule` (architecture freeze, openpyxl==3.1.5 pin, PR evidence rule) |
+| 3 | `b998ddb` | P2.1 `d-cte-harness-impl` (DuckDB-based local CTE replay) |
+| 4 | `0da9108` | P2.1 `d-registry-impl` (4 registries + dispatch) |
+| 5 | `43bf4c8` | P2.4 `d-nextjs-skel` (Next.js 14 App Router skeleton) |
+| 6 | `0d8fbfa` | P2.1 `d-transform-impl` (pure transformation layer) |
+| 7 | `5074f40` | P2.3 `d-fastapi-skel` (FastAPI skeleton with stub routers) |
+| 8 | `96fce8b` | P2.2 `d-sheets-impl` (5 MRC sheet builders) |
+| 9 | `6416cf6` | P2.3 `d-api-contracts` (pydantic schemas + 10 endpoints + FE type mirror) |
+| 10 | `4f68c3f` | P2.4 `d-ui-core-screens` (picker/runs/detail/sheet drill-down + cell panel) |
+| 11 | `eb2ea64` | P2.2 `d-renderer-pin` (XLSX renderer + golden style snapshot + cell-identity smoke PASS) |
+| 12 | `2e659b2` | P2.4 `d-ui-drill-down-impl` (lineage graph + XLSX diff viewer) |
+| 13 | `7e19ddd` | plan: round 3 closure (12/12 d-todos) + § 11 wave-2 summary |
+| 14 | `e47be1b` | P2.5 `stage2-mrc-engine` (MRC validation engine end-to-end pipeline; embedded verdict.json PASS) |
+| 15 | `e5fc87a` | P2.5 `stage2-mrc-cell-identity-harness` (acceptance gate + harness + CI hook) |
+| 16 | _this commit_ | P2.5 `stage2-mrc-acceptance` (v9.1 sign-off, no product code) |
+
+### 12.2 Final numbers
+
+- **Backend pytest**: **299 passed, 2 ENV-SKIP** (full suite, 301 collected).
+  Per-module: registry 20 / transform 26 / sheets 27 / renderer 56 /
+  ingestion 5 / engine 20 / api 27 / acceptance 20 / integration 12 /
+  tools 74 / root 14.
+- **Acceptance gate**: `verdict=PASS`, exit 0; self-consistency
+  `0 major / 0 minor` across all 5 MRC sheets; baseline + legacy SKIPPED
+  (documented ENV-SKIP — G2a still env-blocked).
+- **mypy --strict whitebox/**: clean (61 source files).
+- **ruff (Round 3 new code)**: clean. **ruff (whole repo)**: 34
+  pre-existing legacy/Round-2 errors documented in sign-off § 5 as
+  MARGINAL — janitorial follow-up, does not block v9.1.
+- **Frontend `npm run build`**: green (Next.js 14.2.35, 7 routes,
+  87.3 kB shared First-Load JS).
+- **Restraint**: `openpyxl==3.1.5` pinned; backend top-level deps
+  unchanged (duckdb, openpyxl, pyyaml, pandas, sqlglot + [api] extras);
+  FE deps = next + react + react-dom + reactflow + Tailwind/PostCSS
+  dev only.
+
+### 12.3 Final verdict.json (excerpt — runs/acceptance-signoff-final/)
+
+```json
+{
+  "verdict": "PASS",
+  "exit_code": 0,
+  "components": {
+    "self_consistency": {"status": "PASS", "major": 0, "minor": 0,
+      "per_sheet": [
+        {"sheet": "MRC_Summary_check",    "major": 0, "minor": 0},
+        {"sheet": "MRC_General_Check",    "major": 0, "minor": 0},
+        {"sheet": "MRC_Advance_Check",    "major": 0, "minor": 0},
+        {"sheet": "MRC_ServiceFee_Check", "major": 0, "minor": 0},
+        {"sheet": "MRC_Adv_Info",         "major": 0, "minor": 0}
+      ]
+    },
+    "baseline":    {"status": "SKIPPED", "reason": "--baseline not provided"},
+    "legacy_live": {"status": "SKIPPED", "reason": "--legacy-mode=skip"}
+  }
+}
+```
+
+### 12.4 What remains (gaps from sign-off § 6)
+
+- **G2a** (Redshift snapshot freeze) — deferred, environment-blocked.
+- Real baseline XLSX not yet captured
+  (`baselines/mrc/2026-04-30/CAPTURE_INSTRUCTIONS.md` awaits operator).
+- Validators V1–V12 ship as stubs/DEGRADED on the bundled CTE harness;
+  real validator logic awaits real data.
+- Lineage data fixture-backed; engine-side emission deferred to v9.2.
+- Export endpoint returns 501 (engine-side XLSX streaming deferred).
+- `docs/stage2/12.0-acceptance-gate.zh.md` mirror not yet shipped.
+- 34 pre-existing ruff errors in legacy/Round-2 tooling — janitor pass
+  deferred.
+
+None of the above blocks v9.1 acceptance under
+`docs/stage2/12.0-acceptance-gate.en.md`; each becomes a concrete
+v9.2/v9.3/v9.4 follow-up listed in sign-off § 8.
+
+### 12.5 Pointer
+
+The single sign-off record is `docs/stage2/13.0-v9.1-acceptance-signoff.en.md`
+(English) with `docs/stage2/13.0-v9.1-acceptance-signoff.zh.md` (中文 mirror).

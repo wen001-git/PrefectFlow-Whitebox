@@ -188,3 +188,13 @@ For full per-checkpoint history see
 - Updated `decisions.md` (acceptance-gate-policy entry) and `AGENTS.md` (§ 6.15 new section).
 - Smoke verdict (`--legacy-mode skip`): **PASS**, exit 0; self-consistency PASS 0/0; baseline + legacy SKIPPED with documented reasons.
 - Full pytest suite: **299 passed** (was 269 baseline + 30 new = 18 acceptance + 12 CLI).
+
+
+## 2026-05-18 — P2.5 `stage2-mrc-acceptance` signed off (v9.1 ACCEPTED as dev baseline)
+
+- Audit complete (no new product code): coverage matrix, test counts, quality gates, restraint, PR-evidence rule.
+- Backend pytest 299 passed + 2 ENV-SKIP (documented). mypy strict whitebox/ clean (61 files). ruff clean on Round 3 new code; 34 pre-existing legacy/Round-2 errors documented as MARGINAL. FE `npm run build` green.
+- Acceptance gate (`--legacy-mode skip` + `--legacy-mode dry-run` + final run): `verdict=PASS`, exit 0, self-consistency `0 major / 0 minor` across all 5 MRC sheets. Final verdict under `runs/acceptance-signoff-final/`.
+- PR-evidence audit: all 7 Round 3 commits touching engine/sheets/renderer/validators/transform/ingestion/registry comply (embedded verdict.json or explicit architecture § 6 skeleton waiver).
+- Sign-off documents: `docs/stage2/13.0-v9.1-acceptance-signoff.{en,zh}.md`. `plan.md` § 12 closes Round 3.
+- Known gaps (not blockers, all listed in sign-off § 7): G2a env-blocked, real baseline XLSX not captured, validators DEGRADED on bundled harness, lineage fixture-backed, export 501, 12.0 zh mirror missing, 34 legacy ruff errors.
