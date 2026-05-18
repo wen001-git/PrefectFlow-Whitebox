@@ -42,3 +42,7 @@ diff_report*.json
 baselines/**/input_snapshots/parquet/
 baselines/**/input_snapshots/csv/
 
+# Legacy runner outputs (XLSX, logs, metadata — never committed)
+runs/*
+!runs/.gitkeep
+

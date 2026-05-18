@@ -245,3 +245,30 @@ The UI must:
 - We need an exhaustive coverage table BEFORE the operator runs the export. That's the deliverable.
 
 [... full task spec as provided ...]
+
+## 2026-05-18 — Round 2 C1 xlsx_diff tool
+
+1. You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox`. Source repo at `..\PrefectFlow` is READ-ONLY.
+
+# Your task: Round 2 C1 — XLSX cell-level diff tool
+
+## Context (READ FIRST)
+- Strategy pivot per session `plan.md` § 9 (at `C:\Users\jli\.copilot\session-state\4cd52a8e-d034-4def-84a0-04057dd64872\plan.md`): we replaced frozen-baseline validation with **live legacy-vs-new XLSX comparison**.
+- This tool is THE truth oracle for Stage 2 — every impl PR will rely on it.
+- Ch 1.6 baseline contract (`docs/mrc/1.6-baseline.zh.md`) defines WHAT must match between two XLSX files; read it in full first.
+- `AGENTS.md` § 6.11 for living-doc conventions.
+
+## Goal
+Build `tools/xlsx_diff.py` — a deterministic cell-level XLSX diff tool. Given two XLSX files, produce structured (JSON) + human-readable (HTML) reports.
+
+[... full task spec as provided ...]
+
+
+## 2026-05-17 — Round 2 C2 legacy MRC runner
+
+1. 
+You are working in the PrefectFlow-Whitebox project. CWD: `C:\Users\jli\MyData\Copilot\PrefectFlow-Whitebox`. Source repo at `..\PrefectFlow` is READ-ONLY.
+
+# Your task: Round 2 C2 — Legacy MRC runner adapter (operator-invoked)
+
+[... full task spec as provided ...]

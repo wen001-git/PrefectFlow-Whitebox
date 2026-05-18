@@ -1,0 +1,2 @@
+# Run outputs (XLSX, logs, metadata) are never committed.
+# Create a run directory with: python tools/run_legacy_mrc.py --out-dir runs/legacy/<date>/
